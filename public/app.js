@@ -379,16 +379,14 @@ loginBtn.addEventListener("click", async () => {
     }
 
     currentUser = data.user;
+    localStorage.setItem("realtorCurrentUser", JSON.stringify(currentUser));
     result.innerHTML = `
       <p><strong>Logged in as:</strong> ${currentUser.name}</p>
       <p><strong>Role:</strong> <span class="badge">${currentUser.role}</span></p>
     `;
 
     adminOnlyBox.style.display = "block";
-    const adminResponse = await fetch("/api/dashboard?role=admin");
-    const adminData = await adminResponse.json();
-    adminRows = adminData.rows || [];
-    renderAdminTable(adminRows, adminSearchInput.value);
+    window.location.href = "/realtors.html";
     return;
   }
 
