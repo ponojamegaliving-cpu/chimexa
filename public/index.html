@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crystal Garden Estate Realtors</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Crystal Garden Estate Realtors</h1>
+
+      <div class="login-box">
+        <h2>Login</h2>
+
+        <label for="role">Role</label>
+        <select id="role">
+          <option value="admin">Admin</option>
+          <option value="referrer">Referrer</option>
+          <option value="realtor" selected>Realtor</option>
+        </select>
+
+        <div id="phoneEmailFields">
+          <label for="loginValue">Phone number or email</label>
+          <input id="loginValue" type="text" placeholder="Enter phone or email" />
+        </div>
+
+        <div id="adminCredentialFields" style="display: none;">
+          <label for="adminName">Admin name</label>
+          <input id="adminName" type="text" placeholder="Enter admin name" />
+
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" type="password" placeholder="Enter password" />
+        </div>
+
+        <button id="loginBtn">Login</button>
+      </div>
+
+      <div class="dashboard-box" id="userDashboardBox">
+        <h2>Dashboard</h2>
+        <button id="loadDashboardBtn">Load Dashboard</button>
+        <div id="result"></div>
+      </div>
+
+      <div class="dashboard-box admin-only-box" id="adminOnlyBox" style="display: none;">
+        <h2>Admin Only - Registered Realtors</h2>
+        <p>This section is meant only for the administrator. It shows all registered realtor records in a table view.</p>
+
+        <div class="admin-toolbar">
+          <input id="adminSearch" type="text" placeholder="Search by name, phone, or email" />
+          <button id="toggleAddFormBtn" class="secondary-btn" type="button">Add New Realtor</button>
+          <button id="exportAdminBtn" class="secondary-btn" type="button">Export CSV</button>
+          <input id="importCsvInput" type="file" accept=".csv,text/csv" style="display: none;" />
+          <button id="importCsvBtn" class="secondary-btn" type="button">Import CSV</button>
+          <div id="adminSummary" class="summary-box"></div>
+        </div>
+
+        <div class="paste-panel">
+          <label for="excelPasteBox">Paste Excel data here</label>
+          <textarea id="excelPasteBox" rows="5" placeholder="Copy rows from Excel and press Ctrl+V here..."></textarea>
+          <div class="form-actions inline-actions">
+            <button id="pasteExcelBtn" type="button">Paste from clipboard</button>
+            <button id="importPastedBtn" type="button" class="secondary-btn">Import pasted rows</button>
+          </div>
+        </div>
+
+        <div id="adminFormContainer" class="admin-form hidden">
+          <h3>Add / Edit Realtor</h3>
+          <form id="adminForm">
+            <div class="form-grid">
+              <div><label>REALTORS NAME<input name="REALTORS NAME" type="text" /></label></div>
+              <div><label>DATE OF REG<input name="DATE OF REG" type="date" /></label></div>
+              <div><label>REALTOR ID NO<input name="REALTOR ID NO" type="text" readonly /></label></div>
+              <div><label>GENDER<select name="GENDER"><option value="">Select</option><option>Female</option><option>Male</option></select></label></div>
+              <div><label>DATE OF BIRTH<input name="DATE OF BIRTH" type="date" /></label></div>
+              <div><label>ADDRESS OF REALTOR<input name="ADDRESS OF REALTOR" type="text" /></label></div>
+              <div><label>REALTOR PHONE NO<input name="REALTOR PHONE NO" type="text" /></label></div>
+              <div><label>REALTOR EMAIL ADDRESS<input name="REALTOR EMAIL ADDRESS" type="email" /></label></div>
+              <div><label>COUNTRY OF LOCATION<input name="COUNTRY OF LOCATION" type="text" /></label></div>
+              <div><label>PLACE OF REG<input name="PLACE OF REG" type="text" /></label></div>
+              <div><label>STATE CODE<input name="STATE CODE" type="text" /></label></div>
+              <div><label>STATIONED CITY/LGA<input name="STATIONED CITY/LGA" type="text" /></label></div>
+              <div><label>REG PAYMENT<input name="REG PAYMENT" type="text" /></label></div>
+              <div><label>BANK A/C NO<input name="BANK A/C NO" type="text" /></label></div>
+              <div><label>BANK A/C NAME<input name="BANK A/C NAME" type="text" /></label></div>
+              <div><label>BANK<input name="BANK" type="text" /></label></div>
+              <div><label>REALTOR NEXT OF KIN NAME<input name="REALTOR NEXT OF KIN NAME" type="text" /></label></div>
+              <div><label>NEXT OF KIN ADDRESS<input name="NEXT OF KIN ADDRESS" type="text" /></label></div>
+              <div><label>NEXT OF KIN PHONE NO<input name="NEXT OF KIN PHONE NO" type="text" /></label></div>
+              <div><label>REFEREE NAME<input name="REFEREE NAME" type="text" /></label></div>
+              <div><label>REFEREE ID NO<input name="REFEREE ID NO" type="text" /></label></div>
+              <div><label>REFEREE PHONE NO<input name="REFEREE PHONE NO" type="text" /></label></div>
+              <div><label>REFEREE BANK NAME<input name="REFEREE BANK NAME" type="text" /></label></div>
+              <div><label>REFEREE BANK A/C NO<input name="REFEREE BANK A/C NO" type="text" /></label></div>
+              <div><label>REFEREE A/C NAME<input name="REFEREE A/C NAME" type="text" /></label></div>
+              <div><label>INCENTIVE PAYMENT (YES/NO)<select name="INCENTIVE PAYMENT (YES/NO)"><option value="">Select</option><option>YES</option><option>NO</option></select></label></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit">Save Realtor</button>
+              <button type="button" id="cancelEditBtn" class="secondary-btn">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <div id="adminTableContainer"></div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

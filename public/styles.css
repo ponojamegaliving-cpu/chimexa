@@ -1,0 +1,172 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #1d2a39;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+h1, h2 {
+  margin-bottom: 16px;
+}
+
+.login-box,
+.dashboard-box {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #d0d7e2;
+  font-size: 15px;
+}
+
+button {
+  margin-top: 16px;
+  background: #1f6feb;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:hover {
+  background: #1557bf;
+}
+
+#result {
+  margin-top: 20px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+th, td {
+  border: 1px solid #dfe6ee;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #eef4ff;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  background: #e8f4ea;
+  color: #1b5e20;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-only-box {
+  border: 2px solid #d32f2f;
+  background: #fff6f6;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.admin-toolbar input {
+  flex: 1 1 280px;
+}
+
+.summary-box {
+  font-weight: 700;
+  color: #1d2a39;
+  background: #eef4ff;
+  border: 1px solid #cfe0ff;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.admin-form {
+  background: #fff;
+  border: 1px solid #dfe6ee;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 16px 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.form-grid label {
+  font-size: 13px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.secondary-btn {
+  background: #e7edf9;
+  color: #1d2a39;
+  border: 1px solid #d0d7e2;
+}
+
+.small-btn {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 12px;
+  margin-top: 0;
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.delete-row-btn {
+  background: #d32f2f;
+}
+
+.delete-row-btn:hover {
+  background: #b71c1c;
+}

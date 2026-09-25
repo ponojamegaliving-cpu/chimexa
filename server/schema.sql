@@ -1,0 +1,65 @@
+CREATE TABLE [CRYSTAL GARDEN ESTATE DBF] (
+    [REALTORS NAME] NVARCHAR(200),
+    [DATE OF REG] DATE,
+    [REALTOR ID NO] NVARCHAR(100),
+    [GENDER] NVARCHAR(50),
+    [DATE OF BIRTH] DATE,
+    [ADDRESS OF REALTOR] NVARCHAR(500),
+    [REALTOR PHONE NO] NVARCHAR(50),
+    [REALTOR EMAIL ADDRESS] NVARCHAR(200),
+    [COUNTRY OF LOCATION] NVARCHAR(100),
+    [PLACE OF REG] NVARCHAR(200),
+    [STATE CODE] NVARCHAR(50),
+    [STATIONED CITY/LGA] NVARCHAR(200),
+    [REG PAYMENT] NVARCHAR(100),
+    [BANK A/C NO] NVARCHAR(100),
+    [BANK A/C NAME] NVARCHAR(200),
+    [BANK] NVARCHAR(200),
+    [REALTOR NEXT OF KIN NAME] NVARCHAR(200),
+    [NEXT OF KIN ADDRESS] NVARCHAR(500),
+    [NEXT OF KIN PHONE NO] NVARCHAR(50),
+    [REFEREE NAME] NVARCHAR(200),
+    [REFEREE ID NO] NVARCHAR(100),
+    [REFEREE PHONE NO] NVARCHAR(50),
+    [REFEREE BANK NAME] NVARCHAR(200),
+    [REFEREE BANK A/C NO] NVARCHAR(100),
+    [REFEREE A/C NAME] NVARCHAR(200),
+    [INCENTIVE PAYMENT (YES/NO)] NVARCHAR(20)
+);
+
+INSERT INTO [CRYSTAL GARDEN ESTATE DBF] (
+    [REALTORS NAME],
+    [DATE OF REG],
+    [REALTOR ID NO],
+    [GENDER],
+    [DATE OF BIRTH],
+    [ADDRESS OF REALTOR],
+    [REALTOR PHONE NO],
+    [REALTOR EMAIL ADDRESS],
+    [COUNTRY OF LOCATION],
+    [PLACE OF REG],
+    [STATE CODE],
+    [STATIONED CITY/LGA],
+    [REG PAYMENT],
+    [BANK A/C NO],
+    [BANK A/C NAME],
+    [BANK],
+    [REALTOR NEXT OF KIN NAME],
+    [NEXT OF KIN ADDRESS],
+    [NEXT OF KIN PHONE NO],
+    [REFEREE NAME],
+    [REFEREE ID NO],
+    [REFEREE PHONE NO],
+    [REFEREE BANK NAME],
+    [REFEREE BANK A/C NO],
+    [REFEREE A/C NAME],
+    [INCENTIVE PAYMENT (YES/NO)]
+) VALUES (
+    'Mary Johnson', '2025-01-15', 'R-1001', 'Female', '1990-04-22', '12 Okafor Street, Lekki', '08031234567', 'mary.johnson@gmail.com', 'Nigeria', 'Lagos', 'LA', 'Lekki', 'Paid', '0123456789', 'Mary Johnson', 'Zenith Bank', 'Grace Johnson', '12 Okafor Street, Lekki', '08098765432', 'Peter Okafor', 'F-201', '08020000001', 'Access Bank', '0011223344', 'Peter Okafor', 'YES'
+), (
+    'David Bello', '2025-02-03', 'R-1002', 'Male', '1988-08-10', '9 Victoria Garden City, Lagos', '08032345678', 'david.bello@gmail.com', 'Nigeria', 'Lagos', 'LA', 'Lekki', 'Paid', '1122334455', 'David Bello', 'UBA', 'Bello James', '9 Victoria Garden City, Lagos', '08055556666', 'Peter Okafor', 'F-201', '08020000001', 'Access Bank', '0011223344', 'Peter Okafor', 'NO'
+), (
+    'Aisha Yusuf', '2025-03-10', 'R-1003', 'Female', '1994-11-12', '7 Udo Road, Ikoyi', '08029876543', 'aisha.yusuf@gmail.com', 'Nigeria', 'Abuja', 'FC', 'Gwarinpa', 'Paid', '2233445566', 'Aisha Yusuf', 'First Bank', 'Hassan Yusuf', '7 Udo Road, Ikoyi', '08044445555', 'Jane Mba', 'F-202', '08030000002', 'GTBank', '5566778899', 'Jane Mba', 'YES'
+);
+
+SELECT * FROM [CRYSTAL GARDEN ESTATE DBF];
