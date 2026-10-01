@@ -38,7 +38,7 @@ function generateNextRealtorId(rows) {
     .map((id) => Number(id.trim().replace(/^R-/, "")))
     .filter((value) => Number.isFinite(value));
 
-  const nextNumber = ids.length ? Math.max(...ids) + 1 : 1001;
+  const nextNumber = ids.length ? Math.max(...ids, 1000) + 1 : 1001;
   return `R-${nextNumber}`;
 }
 
@@ -53,19 +53,26 @@ function filterRows(rows, term) {
 
 function renderAdminTable(rows, query = "") {
   const filteredRows = filterRows(rows || [], query);
+  const defaultColumns = [
+    "REALTORS NAME",
+    "REALTOR ID NO",
+    "REALTOR PHONE NO",
+    "REALTOR EMAIL ADDRESS",
+    "REFEREE PHONE NO"
+  ];
 
-  if (!filteredRows || filteredRows.length === 0) {
-    adminTableContainer.innerHTML = "<p>No registered realtors match your search.</p>";
-    adminSummary.innerHTML = "<strong>0</strong> record(s) shown";
-    return;
-  }
+  const columns = filteredRows && filteredRows.length
+    ? Object.keys(filteredRows[0])
+    : defaultColumns;
 
-  const columns = Object.keys(filteredRows[0]);
-  adminSummary.innerHTML = `<strong>${filteredRows.length}</strong> of <strong>${rows.length}</strong> record(s) shown`;
+  adminSummary.innerHTML = filteredRows && filteredRows.length
+    ? `<strong>${filteredRows.length}</strong> of <strong>${rows.length}</strong> record(s) shown`
+    : "<strong>0</strong> record(s) shown";
 
   adminTableContainer.innerHTML = `
+    <div class="table-paste-hint">Paste Excel rows directly into this table area.</div>
     <div class="table-wrap">
-      <table>
+      <table class="pasteable-table" tabindex="0">
         <thead>
           <tr>
             ${columns.map((col) => `<th>${col}</th>`).join("")}
@@ -73,8 +80,8 @@ function renderAdminTable(rows, query = "") {
           </tr>
         </thead>
         <tbody>
-          ${filteredRows
-            .map((row, index) => {
+          ${filteredRows && filteredRows.length ? filteredRows
+            .map((row) => {
               const rowIndex = rows.findIndex((r) => JSON.stringify(r) === JSON.stringify(row));
               return `
                 <tr>
@@ -88,7 +95,29 @@ function renderAdminTable(rows, query = "") {
                 </tr>
               `;
             })
-            .join("")}
+            .join("") : ""}
+          <tr class="new-registration-row">
+            ${columns
+              .map((col) => {
+                const defaultValue = col === "REALTOR ID NO" ? generateNextRealtorId(adminRows) : "";
+                return `
+                  <td class="empty-fill-cell">
+                    <input
+                      class="inline-row-input"
+                      type="text"
+                      data-column="${col}"
+                      placeholder="${col}"
+                      value="${defaultValue}"
+                    />
+                  </td>
+                `;
+              })
+              .join("")}
+            <td>
+              <button type="button" class="small-btn save-inline-row-btn">Save</button>
+              <button type="button" class="small-btn add-new-row-btn secondary-btn">Form</button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -120,6 +149,91 @@ function renderAdminTable(rows, query = "") {
       alert("Deleted realtor successfully.");
     });
   });
+
+  document.querySelectorAll(".add-new-row-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      toggleAddFormBtn.click();
+    });
+  });
+
+  document.querySelectorAll(".save-inline-row-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const row = button.closest("tr");
+      const record = {};
+
+      row.querySelectorAll(".inline-row-input").forEach((input) => {
+        const key = input.dataset.column;
+        const value = String(input.value || "").trim();
+        if (key && value) {
+          record[key] = value;
+        }
+      });
+
+      if (!record["REALTORS NAME"] || !record["REALTOR PHONE NO"]) {
+        alert("Please enter the realtor name and phone number in the table row.");
+        return;
+      }
+
+      if (!record["REALTOR ID NO"]) {
+        record["REALTOR ID NO"] = generateNextRealtorId(adminRows);
+      }
+
+      const response = await fetch("/api/realtors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(record)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Unable to save realtor from table row.");
+        return;
+      }
+
+      await loadAdminRows();
+      alert("Added realtor successfully from table row.");
+    });
+  });
+
+  document.querySelectorAll(".inline-row-input").forEach((input) => {
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        input.closest("tr").querySelector(".save-inline-row-btn").click();
+        return;
+      }
+
+      if (event.key === "Tab" && input.dataset.column === "REALTOR ID NO") {
+        const nextInput = input.closest("td").nextElementSibling?.querySelector(".inline-row-input");
+        if (nextInput) {
+          event.preventDefault();
+          nextInput.focus();
+        }
+      }
+    });
+
+    if (input.dataset.column === "REALTOR ID NO" && !input.value.trim()) {
+      input.value = generateNextRealtorId(adminRows);
+    }
+  });
+
+  const firstInlineInput = adminTableContainer.querySelector(".inline-row-input");
+  if (firstInlineInput) {
+    firstInlineInput.focus();
+  }
+
+  const table = adminTableContainer.querySelector(".pasteable-table");
+  if (table) {
+    table.addEventListener("paste", async (event) => {
+      const clipboardText = event.clipboardData?.getData("text/plain") || "";
+      if (!clipboardText.trim()) {
+        return;
+      }
+
+      event.preventDefault();
+      await importTableText(clipboardText);
+    });
+  }
 }
 
 function resetAdminForm() {
@@ -165,6 +279,10 @@ async function saveAdminRecord(event) {
   if (!record["REALTORS NAME"] || !record["REALTOR PHONE NO"]) {
     alert("Please provide at least the realtor name and phone number.");
     return;
+  }
+
+  if (!record["REALTOR ID NO"] || !/^R-\d+$/.test(String(record["REALTOR ID NO"]).trim())) {
+    record["REALTOR ID NO"] = generateNextRealtorId(adminRows);
   }
 
   const endpoint = editingIndex !== null ? `/api/realtors/${editingIndex}` : "/api/realtors";
@@ -292,6 +410,21 @@ pasteExcelBtn.addEventListener("click", async () => {
 
   excelPasteBox.focus();
   alert("Use Ctrl+V to paste Excel data into the box, then click Import pasted rows.");
+});
+
+adminTableContainer.addEventListener("paste", async (event) => {
+  const clipboardText = event.clipboardData?.getData("text/plain") || "";
+  if (!clipboardText.trim()) {
+    return;
+  }
+
+  const hasTableLikeData = /\t|,|\n/.test(clipboardText);
+  if (!hasTableLikeData) {
+    return;
+  }
+
+  event.preventDefault();
+  await importTableText(clipboardText);
 });
 
 importPastedBtn.addEventListener("click", () => importTableText(excelPasteBox.value));

@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
-const routes = require("./routes");
+const { router: apiRoutes } = require("./routes");
 
 dotenv.config();
 
@@ -13,7 +13,7 @@ const HOST = process.env.HOST || "0.0.0.0";
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
-app.use("/api", routes);
+app.use("/api", apiRoutes);
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));

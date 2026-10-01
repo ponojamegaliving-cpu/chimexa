@@ -3,7 +3,9 @@ const path = require("path");
 const { google } = require("googleapis");
 const { records: fallbackRecords } = require("./data");
 
-const LOCAL_CSV_PATH = path.join(__dirname, "realtors.csv");
+function getLocalCsvPath() {
+  return process.env.REALTORS_CSV_PATH || path.join(__dirname, "realtors.csv");
+}
 
 const DEFAULT_HEADERS = [
   "REALTORS NAME",
@@ -38,6 +40,19 @@ const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || "Realtors";
 const SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const SERVICE_ACCOUNT_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+const MAX_REALTOR_RECORDS = 100000;
+
+function validateRecordCapacity(records) {
+  if (!Array.isArray(records)) {
+    throw new TypeError("Records must be supplied as an array.");
+  }
+
+  if (records.length > MAX_REALTOR_RECORDS) {
+    throw new Error(`Maximum allowed records exceeded. The datasheet supports up to ${MAX_REALTOR_RECORDS} realtor records.`);
+  }
+
+  return records;
+}
 
 function normalize(value) {
   return String(value || "").trim().toLowerCase();
@@ -93,8 +108,19 @@ function generateNextRealtorId(rows) {
     .map((id) => Number(id.trim().replace(/^R-/, "")))
     .filter((value) => Number.isFinite(value));
 
-  const nextNumber = ids.length ? Math.max(...ids) + 1 : 1001;
+  const nextNumber = ids.length ? Math.max(...ids, 1000) + 1 : 1001;
   return `R-${nextNumber}`;
+}
+
+function ensureRealtorId(record, rows) {
+  const safeRecord = { ...(record || {}) };
+  const rawId = String(safeRecord["REALTOR ID NO"] ?? "").trim();
+
+  if (!rawId || !/^R-\d+$/.test(rawId)) {
+    safeRecord["REALTOR ID NO"] = generateNextRealtorId(rows || []);
+  }
+
+  return safeRecord;
 }
 
 function parseDelimitedLine(line, delimiter) {
@@ -172,12 +198,13 @@ function recordsToCsv(records) {
 
 function readLocalCsvRecords() {
   try {
-    if (!fs.existsSync(LOCAL_CSV_PATH)) {
-      fs.writeFileSync(LOCAL_CSV_PATH, recordsToCsv(fallbackRecords), "utf8");
+    const localCsvPath = getLocalCsvPath();
+    if (!fs.existsSync(localCsvPath)) {
+      fs.writeFileSync(localCsvPath, recordsToCsv(fallbackRecords), "utf8");
       return [...fallbackRecords];
     }
 
-    const csvText = fs.readFileSync(LOCAL_CSV_PATH, "utf8");
+    const csvText = fs.readFileSync(localCsvPath, "utf8");
     const rows = csvToRecords(csvText);
     return rows.length ? rows : [...fallbackRecords];
   } catch (error) {
@@ -188,7 +215,9 @@ function readLocalCsvRecords() {
 
 function writeLocalCsvRecords(records) {
   try {
-    fs.writeFileSync(LOCAL_CSV_PATH, recordsToCsv(records), "utf8");
+    const validatedRecords = validateRecordCapacity(records);
+    const localCsvPath = getLocalCsvPath();
+    fs.writeFileSync(localCsvPath, recordsToCsv(validatedRecords), "utf8");
     return true;
   } catch (error) {
     console.warn("Local CSV write failed:", error.message || error);
@@ -226,7 +255,7 @@ async function readRecords() {
   try {
     const sheets = await getSheetsApi();
     if (!sheets) {
-      return readLocalCsvRecords();
+      return validateRecordCapacity(readLocalCsvRecords());
     }
 
     await ensureSheetHeaders();
@@ -238,27 +267,28 @@ async function readRecords() {
 
     const values = response.data.values || [];
     if (values.length === 0) {
-      return readLocalCsvRecords();
+      return validateRecordCapacity(readLocalCsvRecords());
     }
 
-    return rowsToRecords(values);
+    return validateRecordCapacity(rowsToRecords(values));
   } catch (error) {
     console.warn("Google Sheets read failed. Falling back to local CSV:", error.message || error);
-    return readLocalCsvRecords();
+    return validateRecordCapacity(readLocalCsvRecords());
   }
 }
 
 async function writeRecords(records) {
   try {
+    const validatedRecords = validateRecordCapacity(records);
     const sheets = await getSheetsApi();
     if (!sheets) {
-      return writeLocalCsvRecords(records);
+      return writeLocalCsvRecords(validatedRecords);
     }
 
     await ensureSheetHeaders();
 
-    const headers = Object.keys(records[0] || {}).length ? Object.keys(records[0]) : DEFAULT_HEADERS;
-    const rows = [headers, ...records.map((record) => headers.map((header) => record[header] ?? ""))];
+    const headers = Object.keys(validatedRecords[0] || {}).length ? Object.keys(validatedRecords[0]) : DEFAULT_HEADERS;
+    const rows = [headers, ...validatedRecords.map((record) => headers.map((header) => record[header] ?? ""))];
 
     await sheets.spreadsheets.values.update({
       spreadsheetId: SHEET_ID,
@@ -296,30 +326,31 @@ async function importCsvRecords(csvText) {
     });
 
     if (duplicateIndex >= 0) {
-      merged[duplicateIndex] = { ...merged[duplicateIndex], ...record };
+      merged[duplicateIndex] = ensureRealtorId({ ...merged[duplicateIndex], ...record }, merged);
       return;
     }
 
-    if (!record["REALTOR ID NO"] || !/^R-\d+$/.test(String(record["REALTOR ID NO"]).trim())) {
-      record["REALTOR ID NO"] = generateNextRealtorId(merged);
-    }
-
-    merged.push(record);
+    merged.push(ensureRealtorId(record, merged));
   });
 
-  const saved = writeLocalCsvRecords(merged);
+  const finalizedRows = merged.map((record) => ensureRealtorId(record, merged));
+  validateRecordCapacity(finalizedRows);
+
+  const saved = await writeRecords(finalizedRows);
   if (!saved) {
     throw new Error("CSV import failed while saving the file");
   }
 
-  return merged;
+  return finalizedRows;
 }
 
 module.exports = {
+  MAX_REALTOR_RECORDS,
   DEFAULT_HEADERS,
   readRecords,
   writeRecords,
   importCsvRecords,
+  validateRecordCapacity,
   isGoogleSheetEnabled: Boolean(SHEET_ID && SERVICE_ACCOUNT_EMAIL && SERVICE_ACCOUNT_PRIVATE_KEY),
   normalize
 };

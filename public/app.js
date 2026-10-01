@@ -41,7 +41,9 @@ function renderRows(rows) {
     return;
   }
 
-  const columns = Object.keys(rows[0]);
+  const columns = currentUser && currentUser.role === "referrer"
+    ? ["REALTORS NAME", "REALTOR PHONE NO"]
+    : Object.keys(rows[0]);
 
   result.innerHTML = `
     <div class="table-wrap">
@@ -84,7 +86,10 @@ function renderAdminTable(rows, query = "") {
   const filteredRows = filterRows(rows || [], query);
 
   if (!filteredRows || filteredRows.length === 0) {
-    adminTableContainer.innerHTML = "<p>No registered realtors match your search.</p>";
+    adminTableContainer.innerHTML = `
+      <div class="table-paste-hint">Paste Excel rows directly into this table area.</div>
+      <p>No registered realtors match your search.</p>
+    `;
     adminSummary.innerHTML = "<strong>0</strong> record(s) shown";
     return;
   }
@@ -93,8 +98,9 @@ function renderAdminTable(rows, query = "") {
   adminSummary.innerHTML = `<strong>${filteredRows.length}</strong> of <strong>${rows.length}</strong> record(s) shown`;
 
   adminTableContainer.innerHTML = `
+    <div class="table-paste-hint">Paste Excel rows directly into this table area.</div>
     <div class="table-wrap">
-      <table>
+      <table class="pasteable-table" tabindex="0">
         <thead>
           <tr>
             ${columns.map((col) => `<th>${col}</th>`).join("")}
@@ -164,7 +170,7 @@ function generateNextRealtorId(rows) {
     .map((id) => Number(id.trim().replace(/^R-/, "")))
     .filter((value) => Number.isFinite(value));
 
-  const nextNumber = ids.length ? Math.max(...ids) + 1 : 1001;
+  const nextNumber = ids.length ? Math.max(...ids, 1000) + 1 : 1001;
   return `R-${nextNumber}`;
 }
 

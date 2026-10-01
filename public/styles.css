@@ -295,18 +295,50 @@ table {
   background: #fff;
   border-radius: 18px;
   overflow: hidden;
+  table-layout: auto;
 }
 
 th, td {
   border: 1px solid #dfeaf3;
-  padding: 10px 12px;
+  padding: 14px 16px;
   text-align: left;
   vertical-align: top;
+  font-size: 14px;
+  line-height: 1.5;
+  min-width: 150px;
 }
 
 th {
   background: linear-gradient(180deg, #f5f9ff, #edf4ff);
   color: #204664;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.new-registration-row td {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(243, 247, 255, 0.95),
+    rgba(243, 247, 255, 0.95) 8px,
+    rgba(234, 241, 250, 0.9) 8px,
+    rgba(234, 241, 250, 0.9) 16px
+  );
+  min-height: 60px;
+}
+
+.empty-fill-cell {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.table-wrap {
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid #dfeaf3;
+}
+
+.pasteable-table {
+  min-width: 1200px;
 }
 
 .badge {

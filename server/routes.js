@@ -12,8 +12,58 @@ function generateNextRealtorId(rows) {
     .map((id) => Number(id.trim().replace(/^R-/, "")))
     .filter((value) => Number.isFinite(value));
 
-  const nextNumber = ids.length ? Math.max(...ids) + 1 : 1001;
+  const nextNumber = ids.length ? Math.max(...ids, 1000) + 1 : 1001;
   return `R-${nextNumber}`;
+}
+
+function resolveLoginUser(records, loginValue, role) {
+  const matcher = normalize(loginValue || "");
+
+  if (!matcher) {
+    return null;
+  }
+
+  if (role === "referrer") {
+    const referrerMatch = records.find((record) => normalize(record["REFEREE PHONE NO"]) === matcher);
+    if (!referrerMatch) {
+      return null;
+    }
+
+    return {
+      role: "referrer",
+      name: referrerMatch["REFEREE NAME"] || "Referrer",
+      phone: referrerMatch["REFEREE PHONE NO"],
+      email: referrerMatch["REFEREE EMAIL ADDRESS"] || "",
+      refereePhone: referrerMatch["REFEREE PHONE NO"]
+    };
+  }
+
+  const realtorMatch = records.find((record) => {
+    return normalize(record["REALTOR PHONE NO"]) === matcher || normalize(record["REALTOR EMAIL ADDRESS"]) === matcher;
+  });
+
+  if (!realtorMatch) {
+    return null;
+  }
+
+  return {
+    role: role || "realtor",
+    name: realtorMatch["REALTORS NAME"],
+    phone: realtorMatch["REALTOR PHONE NO"],
+    email: realtorMatch["REALTOR EMAIL ADDRESS"],
+    refereePhone: realtorMatch["REFEREE PHONE NO"]
+  };
+}
+
+function getReferrerRows(records, phone) {
+  const referrerPhone = normalize(phone || "");
+
+  return (records || [])
+    .filter((record) => normalize(record["REFEREE PHONE NO"]) === referrerPhone)
+    .map((record) => ({
+      "REALTORS NAME": record["REALTORS NAME"],
+      "REALTOR PHONE NO": record["REALTOR PHONE NO"]
+    }));
 }
 
 router.post("/login", async (req, res) => {
@@ -41,26 +91,13 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "loginValue is required" });
   }
 
-  const matcher = normalize(loginValue);
-  const match = records.find((record) => {
-    return normalize(record["REALTOR PHONE NO"]) === matcher || normalize(record["REALTOR EMAIL ADDRESS"]) === matcher;
-  });
+  const resolvedUser = resolveLoginUser(records, loginValue, role);
 
-  if (!match) {
+  if (!resolvedUser) {
     return res.status(401).json({ error: "Invalid login details" });
   }
 
-  const currentRole = role || "realtor";
-
-  return res.json({
-    user: {
-      role: currentRole,
-      name: match["REALTORS NAME"],
-      phone: match["REALTOR PHONE NO"],
-      email: match["REALTOR EMAIL ADDRESS"],
-      refereePhone: match["REFEREE PHONE NO"]
-    }
-  });
+  return res.json({ user: resolvedUser });
 });
 
 router.post("/realtors", async (req, res) => {
@@ -144,8 +181,7 @@ router.get("/dashboard", async (req, res) => {
   }
 
   if (role === "referrer") {
-    const filtered = records.filter((record) => normalize(record["REFEREE PHONE NO"]) === normalize(phone));
-    return res.json({ rows: filtered });
+    return res.json({ rows: getReferrerRows(records, phone) });
   }
 
   if (role === "realtor") {
@@ -158,4 +194,9 @@ router.get("/dashboard", async (req, res) => {
   return res.status(400).json({ error: "Unknown role" });
 });
 
-module.exports = router;
+module.exports = {
+  router,
+  resolveLoginUser,
+  getReferrerRows,
+  generateNextRealtorId
+};
