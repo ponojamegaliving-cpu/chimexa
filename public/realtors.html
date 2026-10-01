@@ -91,6 +91,22 @@
             </div>
 
             <input id="profilePhotoValue" name="PROFILE PHOTO" type="hidden" />
+            <div id="photoReviewBox" class="photo-review-box hidden">
+              <div class="photo-review-header">
+                <strong>Photo review</strong>
+              </div>
+              <div class="photo-review-content">
+                <img id="photoReviewPreview" alt="Photo review preview" />
+                <div class="photo-review-copy">
+                  <p id="photoReviewStatus">No photo selected.</p>
+                  <p id="photoReviewSuggestion">Suggestion: add a valid image URL or upload a clear photo.</p>
+                </div>
+              </div>
+              <div class="photo-review-actions">
+                <button type="button" id="acceptPhotoSuggestionBtn" class="secondary-btn small-btn">Use suggested photo</button>
+                <button type="button" id="skipPhotoSuggestionBtn" class="small-btn danger-btn">Skip photo</button>
+              </div>
+            </div>
             <div id="profilePhotoPreviewWrap" class="profile-photo-preview-wrap hidden">
               <img id="profilePhotoPreview" alt="Profile preview" />
             </div>

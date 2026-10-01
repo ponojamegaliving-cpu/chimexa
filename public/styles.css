@@ -490,6 +490,59 @@ th {
   box-shadow: 0 12px 22px rgba(35, 72, 116, 0.12);
 }
 
+.photo-review-box {
+  margin-top: 16px;
+  border: 1px solid #d4dfef;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(249, 252, 255, 0.96), rgba(242, 247, 255, 0.9));
+  padding: 14px;
+}
+
+.photo-review-header {
+  margin-bottom: 10px;
+  color: #1f3b5f;
+}
+
+.photo-review-content {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+#photoReviewPreview {
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid rgba(68, 96, 140, 0.2);
+  background: #edf4ff;
+}
+
+.photo-review-copy {
+  flex: 1;
+}
+
+.photo-review-copy p {
+  margin: 0 0 6px;
+  color: #35506f;
+  line-height: 1.5;
+}
+
+.photo-review-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.danger-btn {
+  background: linear-gradient(135deg, #d44b4b, #b82d2d);
+}
+
+.danger-btn:hover {
+  background: linear-gradient(135deg, #bf3d3d, #9d2121);
+}
+
 .hidden {
   display: none;
 }

@@ -8,6 +8,12 @@ const profilePhotoInput = document.getElementById("profilePhotoInput");
 const profilePhotoValue = document.getElementById("profilePhotoValue");
 const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 const profilePhotoPreviewWrap = document.getElementById("profilePhotoPreviewWrap");
+const photoReviewBox = document.getElementById("photoReviewBox");
+const photoReviewPreview = document.getElementById("photoReviewPreview");
+const photoReviewStatus = document.getElementById("photoReviewStatus");
+const photoReviewSuggestion = document.getElementById("photoReviewSuggestion");
+const acceptPhotoSuggestionBtn = document.getElementById("acceptPhotoSuggestionBtn");
+const skipPhotoSuggestionBtn = document.getElementById("skipPhotoSuggestionBtn");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
 const toggleAddFormBtn = document.getElementById("toggleAddFormBtn");
 const exportAdminBtn = document.getElementById("exportAdminBtn");
@@ -416,6 +422,88 @@ function renderAdminTable(rows, query = "") {
   }
 }
 
+function isLikelyImageValue(value) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+
+  if (text.startsWith("data:image/")) return true;
+  if (/^https?:\/\//i.test(text)) {
+    return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(text) || text.includes("image");
+  }
+
+  return false;
+}
+
+function createPhotoReview(value) {
+  const raw = String(value || "").trim();
+
+  if (!raw) {
+    return {
+      valid: false,
+      value: "",
+      suggestion: "No photo selected. Upload a picture or add a valid image URL.",
+      reason: "No photo data was detected."
+    };
+  }
+
+  if (isLikelyImageValue(raw)) {
+    return {
+      valid: true,
+      value: raw,
+      suggestion: "This image looks valid for the Realtor record.",
+      reason: "Image detected and ready for review."
+    };
+  }
+
+  return {
+    valid: false,
+    value: raw,
+    suggestion: "Use a valid image URL such as https://...jpg or upload a photo file.",
+    reason: "The photo value does not look like a supported image."
+  };
+}
+
+function rowsToCsvText(rows) {
+  if (!Array.isArray(rows) || !rows.length) {
+    return "";
+  }
+
+  const headers = Object.keys(rows[0]);
+  const csvRows = [headers.join(",")];
+
+  rows.forEach((row) => {
+    const values = headers.map((header) => {
+      const value = String(row[header] ?? "");
+      return `"${value.replace(/"/g, '""')}"`;
+    });
+    csvRows.push(values.join(","));
+  });
+
+  return csvRows.join("\n");
+}
+
+function renderPhotoReview(review, allowAccept = true) {
+  if (!photoReviewBox || !photoReviewStatus || !photoReviewSuggestion || !photoReviewPreview) {
+    return;
+  }
+
+  if (!review || !review.value) {
+    photoReviewBox.classList.add("hidden");
+    return;
+  }
+
+  photoReviewBox.classList.remove("hidden");
+  photoReviewStatus.textContent = review.reason;
+  photoReviewSuggestion.textContent = review.suggestion;
+  photoReviewPreview.src = review.valid ? review.value : "";
+  photoReviewPreview.alt = review.valid ? "Photo preview" : "No photo preview";
+
+  if (acceptPhotoSuggestionBtn) {
+    acceptPhotoSuggestionBtn.disabled = !allowAccept || !review.valid;
+    acceptPhotoSuggestionBtn.style.opacity = !allowAccept || !review.valid ? "0.5" : "1";
+  }
+}
+
 function resetProfilePhotoField() {
   if (profilePhotoInput) {
     profilePhotoInput.value = "";
@@ -433,6 +521,10 @@ function resetProfilePhotoField() {
   if (profilePhotoPreviewWrap) {
     profilePhotoPreviewWrap.classList.add("hidden");
   }
+
+  if (photoReviewBox) {
+    photoReviewBox.classList.add("hidden");
+  }
 }
 
 function setProfilePhotoPreview(dataUrl) {
@@ -440,14 +532,36 @@ function setProfilePhotoPreview(dataUrl) {
     return;
   }
 
-  profilePhotoValue.value = dataUrl || "";
-  profilePhotoPreview.src = dataUrl || "";
-  if (dataUrl) {
+  const sanitized = String(dataUrl || "").trim();
+  profilePhotoValue.value = sanitized;
+  profilePhotoPreview.src = sanitized || "";
+
+  if (sanitized) {
     profilePhotoPreviewWrap.classList.remove("hidden");
     profilePhotoPreview.alt = "Profile preview";
+    const review = createPhotoReview(sanitized);
+    renderPhotoReview(review, true);
   } else {
     profilePhotoPreviewWrap.classList.add("hidden");
+    renderPhotoReview(createPhotoReview(""), false);
   }
+}
+
+function reviewPhotoBeforeSave(record) {
+  const rawPhoto = String(record["PROFILE PHOTO"] || "").trim();
+  if (!rawPhoto) {
+    return true;
+  }
+
+  const review = createPhotoReview(rawPhoto);
+  renderPhotoReview(review, true);
+
+  if (!review.valid) {
+    alert(review.suggestion);
+    return false;
+  }
+
+  return true;
 }
 
 function resetAdminForm() {
@@ -522,6 +636,10 @@ async function saveAdminRecord(event) {
     return;
   }
 
+  if (!reviewPhotoBeforeSave(record)) {
+    return;
+  }
+
   if (!record["REALTOR ID NO"] || !/^R-\d+$/.test(String(record["REALTOR ID NO"]).trim())) {
     record["REALTOR ID NO"] = generateNextRealtorId(adminRows);
   }
@@ -587,6 +705,14 @@ async function importTableText(tableText) {
         return;
       }
 
+      if (record["PROFILE PHOTO"]) {
+        const review = createPhotoReview(record["PROFILE PHOTO"]);
+        if (!review.valid) {
+          alert(`Photo review: ${review.suggestion}`);
+          delete record["PROFILE PHOTO"];
+        }
+      }
+
       const duplicateIndex = rows.findIndex((entry) => {
         return String(entry["REALTOR PHONE NO"] || "").trim() === String(record["REALTOR PHONE NO"] || "").trim() ||
           String(entry["REALTOR EMAIL ADDRESS"] || "").trim().toLowerCase() === String(record["REALTOR EMAIL ADDRESS"] || "").trim().toLowerCase();
@@ -611,10 +737,23 @@ async function importTableText(tableText) {
     return;
   }
 
+  const parsedRows = parseCsvToRows(text);
+  const safeRows = parsedRows.map((record) => {
+    if (!record["PROFILE PHOTO"]) return record;
+    const review = createPhotoReview(record["PROFILE PHOTO"]);
+    if (!review.valid) {
+      alert(`Photo review for ${record["REALTORS NAME"] || "this row"}: ${review.suggestion}`);
+      delete record["PROFILE PHOTO"];
+    }
+    return record;
+  });
+
+  const sanitizedCsv = rowsToCsvText(safeRows);
+
   const response = await fetch("/api/realtors/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ csv: text })
+    body: JSON.stringify({ csv: sanitizedCsv })
   });
 
   const data = await response.json();
@@ -739,6 +878,26 @@ if (profilePhotoInput) {
       setProfilePhotoPreview(String(reader.result || ""));
     };
     reader.readAsDataURL(file);
+  });
+}
+
+if (acceptPhotoSuggestionBtn) {
+  acceptPhotoSuggestionBtn.addEventListener("click", () => {
+    const review = createPhotoReview(profilePhotoValue ? profilePhotoValue.value : "");
+    if (!review.valid) {
+      alert(review.suggestion);
+      return;
+    }
+
+    setProfilePhotoPreview(review.value);
+    alert("Photo recommendation accepted.");
+  });
+}
+
+if (skipPhotoSuggestionBtn) {
+  skipPhotoSuggestionBtn.addEventListener("click", () => {
+    resetProfilePhotoField();
+    alert("Photo was skipped for this record.");
   });
 }
 
