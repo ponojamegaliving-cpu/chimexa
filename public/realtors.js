@@ -8,6 +8,12 @@ const profilePhotoInput = document.getElementById("profilePhotoInput");
 const profilePhotoValue = document.getElementById("profilePhotoValue");
 const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 const profilePhotoPreviewWrap = document.getElementById("profilePhotoPreviewWrap");
+const photoIntakeInput = document.getElementById("photoIntakeInput");
+const photoIntakePreview = document.getElementById("photoIntakePreview");
+const photoIntakePreviewWrap = document.getElementById("photoIntakePreviewWrap");
+const photoOcrStatus = document.getElementById("photoOcrStatus");
+const photoOcrText = document.getElementById("photoOcrText");
+const photoCaptureBtn = document.getElementById("photoCaptureBtn");
 const photoReviewBox = document.getElementById("photoReviewBox");
 const photoReviewPreview = document.getElementById("photoReviewPreview");
 const photoReviewStatus = document.getElementById("photoReviewStatus");
@@ -547,6 +553,130 @@ function setProfilePhotoPreview(dataUrl) {
   }
 }
 
+function extractPhotoFields(text) {
+  const lines = String(text || "").split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const fields = [
+    { name: "REALTORS NAME", labels: /^(?:realtors?\s+name|full\s+name|name\s+of\s+realtor|name)\b/i },
+    { name: "DATE OF REG", labels: /^(?:date\s+of\s+reg|registration\s+date)\b/i },
+    { name: "ADDRESS OF REALTOR", labels: /^(?:address\s+of\s+realtor|residential\s+address|address)\b/i },
+    { name: "REALTOR PHONE NO", labels: /^(?:realtor\s+)?(?:phone|mobile|telephone)(?:\s+(?:no\.?|number))?\b/i },
+    { name: "REALTOR EMAIL ADDRESS", labels: /^(?:realtor\s+)?e-?mail(?:\s+address)?\b/i },
+    { name: "GENDER", labels: /^gender\b/i },
+    { name: "DATE OF BIRTH", labels: /^(?:date\s+of\s+birth|d\.?o\.?b\.?)\b/i },
+    { name: "COUNTRY OF LOCATION", labels: /^(?:country|country\s+of\s+location)\b/i },
+    { name: "PLACE OF REG", labels: /^(?:place\s+of\s+reg|registration\s+place)\b/i },
+    { name: "STATIONED CITY/LGA", labels: /^(?:stationed\s+city\/?lga|city\/?lga|city)\b/i },
+    { name: "STATE CODE", labels: /^(?:state\s+code|state)\b/i },
+    { name: "REG PAYMENT", labels: /^(?:reg\s+payment|registration\s+payment)\b/i },
+    { name: "BANK A/C NO", labels: /^(?:bank\s+(?:a\/?c|account)\s*(?:no\.?|number)|account\s+(?:no\.?|number))\b/i },
+    { name: "BANK A/C NAME", labels: /^(?:bank\s+(?:a\/?c|account)\s+name|account\s+name)\b/i },
+    { name: "BANK", labels: /^bank\s+name\b/i },
+    { name: "REALTOR NEXT OF KIN NAME", labels: /^(?:realtor\s+)?next\s+of\s+kin\s+name\b/i },
+    { name: "NEXT OF KIN ADDRESS", labels: /^next\s+of\s+kin\s+address\b/i },
+    { name: "NEXT OF KIN PHONE NO", labels: /^next\s+of\s+kin\s+(?:phone|mobile)(?:\s+(?:no\.?|number))?\b/i },
+    { name: "REFEREE NAME", labels: /^referee\s+name\b/i },
+    { name: "REFEREE PHONE NO", labels: /^referee\s+(?:phone|mobile)(?:\s+(?:no\.?|number))?\b/i },
+    { name: "REFEREE BANK NAME", labels: /^referee\s+bank(?:\s+name)?\b/i },
+    { name: "REFEREE BANK A/C NO", labels: /^referee\s+bank\s+(?:a\/?c|account)\s*(?:no\.?|number)\b/i },
+    { name: "REFEREE A/C NAME", labels: /^referee\s+(?:bank\s+)?(?:a\/?c|account)\s+name\b/i },
+    { name: "INCENTIVE PAYMENT (YES/NO)", labels: /^incentive\s+payment(?:\s*\(yes\/?no\))?\b/i }
+  ];
+  const values = {};
+
+  fields.forEach(({ name, labels }) => {
+    const lineIndex = lines.findIndex((line) => labels.test(line));
+    if (lineIndex < 0) return;
+
+    const line = lines[lineIndex];
+    const value = line.replace(labels, "").replace(/^\s*[:#=-]?\s*/, "").trim();
+    const nextLine = lines[lineIndex + 1] || "";
+    values[name] = value || (nextLine && !fields.some((field) => field.labels.test(nextLine)) ? nextLine : "");
+  });
+
+  const fullText = lines.join("\n");
+  if (!values["REALTOR EMAIL ADDRESS"]) {
+    values["REALTOR EMAIL ADDRESS"] = fullText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || "";
+  }
+  return values;
+}
+
+function applyOcrSuggestions(text) {
+  const suggestions = extractPhotoFields(text);
+  let populated = 0;
+
+  Object.entries(suggestions).forEach(([name, value]) => {
+    const field = adminForm.elements.namedItem(name);
+    if (!field || !value || String(field.value || "").trim()) return;
+
+    field.value = value;
+    populated += 1;
+  });
+
+  const idField = adminForm.elements.namedItem("REALTOR ID NO");
+  if (idField && !idField.value) idField.value = generateNextRealtorId(adminRows);
+  return populated;
+}
+
+async function applyPhotoDraft(file) {
+  if (!file) return;
+  if (!window.Tesseract) {
+    if (photoOcrStatus) photoOcrStatus.textContent = "Text recognition could not load. Refresh the page and try again.";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = String(reader.result || "");
+    if (photoIntakePreview && photoIntakePreviewWrap) {
+      photoIntakePreview.src = dataUrl;
+      photoIntakePreviewWrap.classList.remove("hidden");
+    }
+
+    setProfilePhotoPreview(dataUrl);
+
+    const photoField = adminForm.elements.namedItem("PROFILE PHOTO");
+    if (photoField) {
+      photoField.value = dataUrl;
+    }
+
+    if (photoOcrStatus) photoOcrStatus.textContent = "Reading text from the photo...";
+    if (photoOcrText) photoOcrText.textContent = "Processing image...";
+
+    let worker;
+    try {
+      worker = await window.Tesseract.createWorker("eng", 1, {
+        workerPath: "/vendor/tesseract/worker.min.js",
+        corePath: "/vendor/tesseract-core",
+        langPath: "/vendor/tessdata/eng/4.0.0",
+        logger: (message) => {
+          if (message.status === "recognizing text" && photoOcrStatus) {
+            photoOcrStatus.textContent = `Reading text from the photo... ${Math.round((message.progress || 0) * 100)}%`;
+          }
+        }
+      });
+      const { data } = await worker.recognize(file);
+      const recognizedText = String(data.text || "").trim();
+      const populated = applyOcrSuggestions(recognizedText);
+      if (photoOcrText) photoOcrText.textContent = recognizedText || "No text found. Try a clearer, well-lit photo.";
+      if (photoOcrStatus) {
+        photoOcrStatus.textContent = recognizedText
+          ? `Text recognized. ${populated} blank field${populated === 1 ? " was" : "s were"} suggested; review and correct them before saving.`
+          : "No text found. Try a clearer, well-lit photo.";
+      }
+    } catch (error) {
+      console.error("Photo text recognition failed:", error);
+      if (photoOcrStatus) photoOcrStatus.textContent = "Could not read this image. Try a clearer photo or enter the details manually.";
+      if (photoOcrText) photoOcrText.textContent = "Text recognition failed.";
+    } finally {
+      if (worker) await worker.terminate();
+    }
+  };
+  reader.onerror = () => {
+    if (photoOcrStatus) photoOcrStatus.textContent = "Could not open this image. Choose another photo.";
+  };
+  reader.readAsDataURL(file);
+}
+
 function reviewPhotoBeforeSave(record) {
   const rawPhoto = String(record["PROFILE PHOTO"] || "").trim();
   if (!rawPhoto) {
@@ -865,6 +995,25 @@ adminTableContainer.addEventListener("paste", async (event) => {
 });
 
 importPastedBtn.addEventListener("click", () => importTableText(excelPasteBox.value));
+if (photoCaptureBtn) {
+  photoCaptureBtn.addEventListener("click", () => {
+    if (photoIntakeInput) {
+      photoIntakeInput.click();
+    }
+  });
+}
+
+if (photoIntakeInput) {
+  photoIntakeInput.addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    applyPhotoDraft(file);
+  });
+}
+
 if (profilePhotoInput) {
   profilePhotoInput.addEventListener("change", (event) => {
     const file = event.target.files && event.target.files[0];

@@ -490,6 +490,75 @@ th {
   box-shadow: 0 12px 22px rgba(35, 72, 116, 0.12);
 }
 
+.photo-intake-panel {
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid #d7e3f3;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(244, 249, 255, 0.96), rgba(236, 244, 255, 0.88));
+}
+
+.photo-intake-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.photo-intake-header h4 {
+  margin: 0;
+  color: #244b77;
+}
+
+.photo-intake-preview-wrap {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+  border: 1px dashed #bfd0ee;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.photo-intake-preview-wrap img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 2px solid rgba(48, 82, 129, 0.18);
+  box-shadow: 0 12px 24px rgba(39, 72, 111, 0.12);
+}
+
+.photo-intake-help {
+  margin: 10px 0 0;
+  color: #49698a;
+  line-height: 1.5;
+}
+
+.photo-ocr-status {
+  margin: 10px 0;
+  color: #244b77;
+  font-weight: 600;
+}
+
+.photo-ocr-result {
+  margin-top: 10px;
+  color: #244b77;
+}
+
+.photo-ocr-result pre {
+  max-height: 180px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid #d7e3f3;
+  border-radius: 8px;
+  background: #fff;
+  color: #18314f;
+  white-space: pre-wrap;
+}
+
 .photo-review-box {
   margin-top: 16px;
   border: 1px solid #d4dfef;

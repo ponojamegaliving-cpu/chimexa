@@ -59,6 +59,24 @@
 
         <div id="adminFormContainer" class="admin-form hidden">
           <h3>Add / Edit Realtor</h3>
+
+          <div id="photoIntakePanel" class="photo-intake-panel">
+            <div class="photo-intake-header">
+              <h4>Photo intake</h4>
+              <button type="button" id="photoCaptureBtn" class="secondary-btn small-btn">Snap / Upload Photo</button>
+            </div>
+            <input id="photoIntakeInput" type="file" accept="image/*" capture="environment" />
+            <p id="photoOcrStatus" class="photo-ocr-status" aria-live="polite">Choose a clear photo of a realtor form to read its text.</p>
+            <div id="photoIntakePreviewWrap" class="photo-intake-preview-wrap hidden">
+              <img id="photoIntakePreview" alt="Photo intake preview" />
+            </div>
+            <details class="photo-ocr-result">
+              <summary>Recognized text</summary>
+              <pre id="photoOcrText">No image processed yet.</pre>
+            </details>
+            <p class="photo-intake-help">Reads printed English text locally on this device. Check and correct the editable suggestions before saving into the Realtor table.</p>
+          </div>
+
           <form id="adminForm">
             <div class="form-grid">
               <div><label>REALTORS NAME<input name="REALTORS NAME" type="text" /></label></div>
@@ -123,6 +141,7 @@
     </div>
 
     <script src="/offlineSync.js"></script>
+    <script src="/vendor/tesseract/tesseract.min.js"></script>
     <script src="/realtors.js"></script>
   </body>
 </html>
