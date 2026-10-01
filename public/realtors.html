@@ -11,18 +11,33 @@
       <div class="page-header">
         <h1>Registered Realtors</h1>
         <div class="page-actions">
-          <button id="backToLoginBtn" type="button">Back to Login</button>
-          <button id="refreshTableBtn" type="button" class="secondary-btn">Refresh</button>
+          <button id="backToLoginBtn" type="button" class="tool-button primary-tool-btn">
+            <span class="action-icon">↩</span>
+            <span>Back to Login</span>
+          </button>
+          <button id="refreshTableBtn" type="button" class="secondary-btn tool-button">
+            <span class="action-icon">↻</span>
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 
       <div class="dashboard-box admin-only-box">
         <div class="admin-toolbar">
           <input id="adminSearch" type="text" placeholder="Search by name, phone, or email" />
-          <button id="toggleAddFormBtn" class="secondary-btn" type="button">Add New Realtor</button>
-          <button id="exportAdminBtn" class="secondary-btn" type="button">Export CSV</button>
+          <button id="toggleAddFormBtn" class="secondary-btn tool-button" type="button">
+            <span class="action-icon">＋</span>
+            <span>Add New Realtor</span>
+          </button>
+          <button id="exportAdminBtn" class="secondary-btn tool-button" type="button">
+            <span class="action-icon">⇩</span>
+            <span>Export CSV</span>
+          </button>
           <input id="importCsvInput" type="file" accept=".csv,text/csv" style="display: none;" />
-          <button id="importCsvBtn" class="secondary-btn" type="button">Import CSV</button>
+          <button id="importCsvBtn" class="secondary-btn tool-button" type="button">
+            <span class="action-icon">⇪</span>
+            <span>Import CSV</span>
+          </button>
           <div id="adminSummary" class="summary-box"></div>
         </div>
 
@@ -30,8 +45,14 @@
           <label for="excelPasteBox">Paste Excel rows here or directly into the table below</label>
           <textarea id="excelPasteBox" rows="5" placeholder="Copy rows from Excel and press Ctrl+V here..."></textarea>
           <div class="form-actions inline-actions">
-            <button id="pasteExcelBtn" type="button">Paste from clipboard</button>
-            <button id="importPastedBtn" type="button" class="secondary-btn">Import pasted rows</button>
+            <button id="pasteExcelBtn" type="button" class="tool-button">
+              <span class="action-icon">📋</span>
+              <span>Paste from clipboard</span>
+            </button>
+            <button id="importPastedBtn" type="button" class="secondary-btn tool-button">
+              <span class="action-icon">⬆</span>
+              <span>Import pasted rows</span>
+            </button>
           </div>
         </div>
 

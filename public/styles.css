@@ -259,6 +259,40 @@ button:hover {
   background: linear-gradient(135deg, #123553, #2464a7);
 }
 
+.tool-button,
+.page-actions button,
+.form-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  white-space: nowrap;
+  width: auto;
+}
+
+.action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.secondary-btn .action-icon {
+  background: rgba(32, 71, 117, 0.08);
+}
+
+.primary-tool-btn {
+  background: linear-gradient(135deg, #173f66, #2e7ac1);
+}
+
 button.secondary-btn,
 button.small-btn {
   margin-top: 0;
@@ -362,19 +396,34 @@ th {
   gap: 12px;
   align-items: center;
   margin: 16px 0;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(246, 250, 255, 0.9);
+  border: 1px solid rgba(180, 200, 225, 0.8);
 }
 
 .admin-toolbar input {
-  flex: 1 1 280px;
+  flex: 1 1 260px;
+  min-height: 46px;
+}
+
+.admin-toolbar .tool-button,
+.page-actions .tool-button {
+  flex: 0 0 auto;
 }
 
 .summary-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
   font-weight: 700;
   color: #1d2a39;
   background: #eef4ff;
   border: 1px solid #cfe0ff;
   border-radius: 10px;
   padding: 10px 12px;
+  margin-left: auto;
 }
 
 .admin-form {
