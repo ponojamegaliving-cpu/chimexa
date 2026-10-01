@@ -72,12 +72,14 @@ function renderRows(rows) {
 }
 
 function filterRows(rows, term) {
-  const query = (term || "").trim().toLowerCase();
-  if (!query) return rows;
+  const normalized = String(term ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+  if (!normalized) return rows;
+
+  const terms = normalized.split(" ").filter(Boolean);
 
   return rows.filter((row) => {
-    return Object.values(row).some((value) => {
-      return String(value ?? "").toLowerCase().includes(query);
+    return terms.every((part) => {
+      return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(part));
     });
   });
 }
