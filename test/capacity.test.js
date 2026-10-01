@@ -111,6 +111,24 @@ test('new records start from the normal Realtor ID sequence instead of a random-
   assert.equal(nextId, 'R-1001');
 });
 
+test('profile photos are preserved as data URLs in persisted records', async () => {
+  const photoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAF';
+  const record = {
+    'REALTORS NAME': 'Photo User',
+    'REALTOR ID NO': 'R-9001',
+    'REALTOR PHONE NO': '08090000099',
+    'REALTOR EMAIL ADDRESS': 'photo.user@example.com',
+    'PROFILE PHOTO': photoData
+  };
+
+  await writeRecords([record]);
+  const rows = await require('../server/googleSheets').readRecords();
+  const saved = rows.find((entry) => entry['REALTOR PHONE NO'] === '08090000099');
+
+  assert.ok(saved);
+  assert.equal(saved['PROFILE PHOTO'], photoData);
+});
+
 test('later CSV imports append to existing records instead of replacing them', async () => {
   const firstCsv = [
     'REALTORS NAME,REALTOR PHONE NO,REALTOR EMAIL ADDRESS,REALTOR ID NO',

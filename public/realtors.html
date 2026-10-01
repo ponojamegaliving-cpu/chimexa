@@ -62,6 +62,7 @@
           <form id="adminForm">
             <div class="form-grid">
               <div><label>REALTORS NAME<input name="REALTORS NAME" type="text" /></label></div>
+              <div><label>PROFILE PHOTO<input id="profilePhotoInput" type="file" accept="image/*" /></label></div>
               <div><label>DATE OF REG<input name="DATE OF REG" type="date" /></label></div>
               <div><label>REALTOR ID NO<input name="REALTOR ID NO" type="text" readonly /></label></div>
               <div><label>GENDER<select name="GENDER"><option value="">Select</option><option>Female</option><option>Male</option></select></label></div>
@@ -87,6 +88,11 @@
               <div><label>REFEREE BANK A/C NO<input name="REFEREE BANK A/C NO" type="text" /></label></div>
               <div><label>REFEREE A/C NAME<input name="REFEREE A/C NAME" type="text" /></label></div>
               <div><label>INCENTIVE PAYMENT (YES/NO)<select name="INCENTIVE PAYMENT (YES/NO)"><option value="">Select</option><option>YES</option><option>NO</option></select></label></div>
+            </div>
+
+            <input id="profilePhotoValue" name="PROFILE PHOTO" type="hidden" />
+            <div id="profilePhotoPreviewWrap" class="profile-photo-preview-wrap hidden">
+              <img id="profilePhotoPreview" alt="Profile preview" />
             </div>
 
             <div class="form-actions">

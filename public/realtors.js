@@ -4,6 +4,10 @@ const adminTableContainer = document.getElementById("adminTableContainer");
 const offlineStatus = document.getElementById("offlineStatus");
 const adminFormContainer = document.getElementById("adminFormContainer");
 const adminForm = document.getElementById("adminForm");
+const profilePhotoInput = document.getElementById("profilePhotoInput");
+const profilePhotoValue = document.getElementById("profilePhotoValue");
+const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+const profilePhotoPreviewWrap = document.getElementById("profilePhotoPreviewWrap");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
 const toggleAddFormBtn = document.getElementById("toggleAddFormBtn");
 const exportAdminBtn = document.getElementById("exportAdminBtn");
@@ -211,10 +215,19 @@ function filterRows(rows, term) {
   });
 }
 
+function renderCellValue(value, columnName) {
+  if (columnName === "PROFILE PHOTO" && value) {
+    return `<img src="${value}" alt="Profile photo" class="table-photo" />`;
+  }
+
+  return value ?? "";
+}
+
 function renderAdminTable(rows, query = "") {
   const filteredRows = filterRows(rows || [], query);
   const defaultColumns = [
     "REALTORS NAME",
+    "PROFILE PHOTO",
     "REALTOR ID NO",
     "REALTOR PHONE NO",
     "REALTOR EMAIL ADDRESS",
@@ -245,7 +258,7 @@ function renderAdminTable(rows, query = "") {
               const rowIndex = rows.findIndex((r) => JSON.stringify(r) === JSON.stringify(row));
               return `
                 <tr>
-                  ${columns.map((col) => `<td>${row[col] ?? ""}</td>`).join("")}
+                  ${columns.map((col) => `<td>${renderCellValue(row[col], col)}</td>`).join("")}
                   <td>
                     <div class="row-actions">
                       <button type="button" class="small-btn edit-row-btn" data-index="${rowIndex}">Edit</button>
@@ -403,8 +416,43 @@ function renderAdminTable(rows, query = "") {
   }
 }
 
+function resetProfilePhotoField() {
+  if (profilePhotoInput) {
+    profilePhotoInput.value = "";
+  }
+
+  if (profilePhotoValue) {
+    profilePhotoValue.value = "";
+  }
+
+  if (profilePhotoPreview) {
+    profilePhotoPreview.src = "";
+    profilePhotoPreview.alt = "Profile preview";
+  }
+
+  if (profilePhotoPreviewWrap) {
+    profilePhotoPreviewWrap.classList.add("hidden");
+  }
+}
+
+function setProfilePhotoPreview(dataUrl) {
+  if (!profilePhotoPreview || !profilePhotoPreviewWrap || !profilePhotoValue) {
+    return;
+  }
+
+  profilePhotoValue.value = dataUrl || "";
+  profilePhotoPreview.src = dataUrl || "";
+  if (dataUrl) {
+    profilePhotoPreviewWrap.classList.remove("hidden");
+    profilePhotoPreview.alt = "Profile preview";
+  } else {
+    profilePhotoPreviewWrap.classList.add("hidden");
+  }
+}
+
 function resetAdminForm() {
   adminForm.reset();
+  resetProfilePhotoField();
   editingIndex = null;
   adminFormContainer.classList.add("hidden");
 }
@@ -420,8 +468,15 @@ function openAdminForm(mode = "add", index = null) {
         field.value = value ?? "";
       }
     });
+
+    if (adminRows[index]["PROFILE PHOTO"]) {
+      setProfilePhotoPreview(adminRows[index]["PROFILE PHOTO"]);
+    } else {
+      resetProfilePhotoField();
+    }
   } else {
     adminForm.reset();
+    resetProfilePhotoField();
     editingIndex = null;
     const idField = adminForm.elements.namedItem("REALTOR ID NO");
     if (idField) {
@@ -671,6 +726,22 @@ adminTableContainer.addEventListener("paste", async (event) => {
 });
 
 importPastedBtn.addEventListener("click", () => importTableText(excelPasteBox.value));
+if (profilePhotoInput) {
+  profilePhotoInput.addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      resetProfilePhotoField();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfilePhotoPreview(String(reader.result || ""));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 cancelEditBtn.addEventListener("click", resetAdminForm);
 adminForm.addEventListener("submit", saveAdminRecord);
 backToLoginBtn.addEventListener("click", redirectToLogin);
