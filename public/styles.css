@@ -426,6 +426,32 @@ th {
   margin-left: auto;
 }
 
+.offline-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.offline-status.online {
+  background: #eafae9;
+  border-color: #bfeab5;
+  color: #1d6b2f;
+}
+
+.offline-status.offline {
+  background: #fff3eb;
+  border-color: #f4c7a0;
+  color: #9a4b08;
+}
+
 .admin-form {
   background: #fff;
   border: 1px solid #dfe6ee;
