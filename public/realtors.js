@@ -221,11 +221,6 @@ function renderAdminTable(rows, query = "") {
     }
   });
 
-  const firstInlineInput = adminTableContainer.querySelector(".inline-row-input");
-  if (firstInlineInput) {
-    firstInlineInput.focus();
-  }
-
   const table = adminTableContainer.querySelector(".pasteable-table");
   if (table) {
     table.addEventListener("paste", async (event) => {
