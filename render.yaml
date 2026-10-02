@@ -24,3 +24,9 @@ services:
         sync: false
       - key: GOOGLE_PRIVATE_KEY
         sync: false
+      - key: FORM_VISION_API_KEY
+        sync: false
+      - key: FORM_VISION_API_URL
+        value: https://api.openai.com/v1/chat/completions
+      - key: FORM_VISION_MODEL
+        value: gpt-4o-mini

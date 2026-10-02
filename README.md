@@ -68,6 +68,7 @@ Recommended deployment steps:
    - `ADMIN_NAME`
    - `ADMIN_PASSWORD`
    - Optional Google Sheets variables: `GOOGLE_SHEET_ID`, `GOOGLE_SHEET_NAME`, `GOOGLE_SERVICE_ACCOUNT_EMAIL`, `GOOGLE_PRIVATE_KEY`
+   - `FORM_VISION_API_KEY` for the separate registration-form screening page
 2. Use the included `render.yaml`, `Dockerfile`, or `Procfile` for deployment.
 3. Point your domain or public URL to the deployed service.
 4. Keep the app behind HTTPS and do not store secrets in source control.
