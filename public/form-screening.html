@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Form Screening</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container form-screening-page">
+      <header class="page-header">
+        <div>
+          <p class="screening-eyebrow">Crystal Garden Estate Realtors</p>
+          <h1>Registration form screening</h1>
+        </div>
+        <div class="page-actions">
+          <a class="button-link secondary-btn" href="/realtors.html">Back to Realtors</a>
+        </div>
+      </header>
+
+      <section class="dashboard-box screening-panel">
+        <p>Upload both sides of one completed Realtor registration form. The separate vision AI will use the existing Realtor field names as its output format and combine details visible on either side.</p>
+        <p class="screening-privacy"><strong>Privacy:</strong> When you select “Analyze both sides,” the images are sent to the vision service configured on this app’s server. They are not sent to the existing OCR or Ollama service and are not saved by this page. Confirm that the configured service is approved for the personal and financial information on the form.</p>
+        <div class="screening-admin-confirm">
+          <label for="adminPassword">Admin password (confirmed separately for each analyze or save request)</label>
+          <input id="adminPassword" type="password" autocomplete="current-password" required />
+        </div>
+
+        <div class="screening-image-grid">
+          <section class="screening-image-card">
+            <label for="frontImage">Front of registration form</label>
+            <input id="frontImage" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" />
+            <div class="screening-preview hidden" id="frontPreviewWrap">
+              <img id="frontPreview" alt="Preview of form front" />
+            </div>
+          </section>
+          <section class="screening-image-card">
+            <label for="backImage">Back of registration form</label>
+            <input id="backImage" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" />
+            <div class="screening-preview hidden" id="backPreviewWrap">
+              <img id="backPreview" alt="Preview of form back" />
+            </div>
+          </section>
+        </div>
+
+        <div class="form-actions screening-actions">
+          <button id="analyzeFormBtn" type="button">Analyze both sides</button>
+          <button id="clearFormBtn" type="button" class="secondary-btn">Clear form</button>
+        </div>
+        <p id="screeningStatus" class="screening-status" role="status" aria-live="polite">Choose a front and back image to begin.</p>
+      </section>
+
+      <section id="screeningReview" class="dashboard-box screening-panel hidden">
+        <h2>Review extracted fields</h2>
+        <p>Check and edit every suggestion. Values marked “Check” were unclear or missing in the images. Nothing is saved until you select “Save reviewed Realtor.”</p>
+        <div class="table-wrap screening-table-wrap">
+          <table class="screening-table">
+            <thead>
+              <tr><th>Existing Realtor field</th><th>Suggested value (editable)</th><th>Review</th></tr>
+            </thead>
+            <tbody id="screeningReviewRows"></tbody>
+          </table>
+        </div>
+        <div class="form-actions screening-actions">
+          <button id="saveReviewedBtn" type="button">Save reviewed Realtor</button>
+        </div>
+      </section>
+    </main>
+    <script src="/form-screening.js"></script>
+  </body>
+</html>

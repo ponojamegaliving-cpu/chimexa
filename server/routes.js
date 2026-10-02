@@ -1,5 +1,6 @@
 const express = require("express");
 const { readRecords, writeRecords, normalize, importCsvRecords } = require("./googleSheets");
+const { REALTOR_FORM_FIELDS, extractRegistrationForm } = require("./registrationFormVision");
 
 const router = express.Router();
 const ADMIN_NAME = process.env.ADMIN_NAME || "ONOJA PAUL";
@@ -17,15 +18,8 @@ function getOpenAiApiKey() {
 function getOpenAiModel() {
   return process.env.OPENAI_MODEL || "gpt-4o-mini";
 }
-const REALTOR_IMAGE_FIELDS = [
-  "REALTORS NAME", "DATE OF REG", "REALTOR ID NO", "GENDER", "DATE OF BIRTH",
-  "ADDRESS OF REALTOR", "REALTOR PHONE NO", "REALTOR EMAIL ADDRESS", "COUNTRY OF LOCATION",
-  "PLACE OF REG", "STATE CODE", "STATIONED CITY/LGA", "REG PAYMENT", "BANK A/C NO",
-  "BANK A/C NAME", "BANK", "REALTOR NEXT OF KIN NAME", "NEXT OF KIN ADDRESS",
-  "NEXT OF KIN PHONE NO", "REFEREE NAME", "REFEREE ID NO", "REFEREE PHONE NO",
-  "REFEREE BANK NAME", "REFEREE BANK A/C NO", "REFEREE A/C NAME", "INCENTIVE PAYMENT (YES/NO)"
-];
 const imageExtractionRequests = new Map();
+const formScreeningRequests = new Map();
 
 function isImageExtractionRateLimited(req) {
   const now = Date.now();
@@ -145,7 +139,7 @@ async function extractRealtorImage(imageData) {
     "Return one JSON object using exactly the requested field names and string values.",
     "Use an empty string when a value is absent or unclear. Do not guess. Preserve leading zeroes in phone and account numbers.",
     "Write dates as YYYY-MM-DD only when unambiguous; otherwise use the visible date text.",
-    `Fields: ${REALTOR_IMAGE_FIELDS.join(" | ")}`
+    `Fields: ${REALTOR_FORM_FIELDS.join(" | ")}`
   ].join(" ");
 
   let response;
@@ -189,11 +183,29 @@ async function extractRealtorImage(imageData) {
   }
 
   const values = {};
-  REALTOR_IMAGE_FIELDS.forEach((field) => {
+  REALTOR_FORM_FIELDS.forEach((field) => {
     const value = parsed[field];
     values[field] = value === null || value === undefined ? "" : String(value).trim();
   });
   return values;
+}
+
+function isFormScreeningRateLimited(req) {
+  const now = Date.now();
+  const address = req.ip || req.socket?.remoteAddress || "unknown";
+  for (const [key, request] of formScreeningRequests) {
+    if (request.expiresAt <= now) formScreeningRequests.delete(key);
+  }
+
+  const current = formScreeningRequests.get(address);
+  if (!current || current.expiresAt <= now) {
+    formScreeningRequests.set(address, { count: 1, expiresAt: now + 60_000 });
+    return false;
+  }
+  if (current.count >= 5) return true;
+
+  current.count += 1;
+  return false;
 }
 
 function generateNextRealtorId(rows) {
@@ -205,6 +217,36 @@ function generateNextRealtorId(rows) {
 
   const nextNumber = ids.length ? Math.max(...ids, 1000) + 1 : 1001;
   return `R-${nextNumber}`;
+}
+
+function isValidAdminCredentials(adminName, adminPassword) {
+  return normalize(adminName) === normalize(ADMIN_NAME) && String(adminPassword || "") === ADMIN_PASSWORD;
+}
+
+async function createRealtorRecord(input) {
+  const record = { ...(input || {}) };
+  const records = await readRecords();
+
+  if (!record["REALTORS NAME"] || !record["REALTOR PHONE NO"]) {
+    return { status: 400, body: { error: "REALTORS NAME and REALTOR PHONE NO are required" } };
+  }
+
+  if (!record["REALTOR ID NO"] || !/^R-\d+$/.test(String(record["REALTOR ID NO"]).trim())) {
+    record["REALTOR ID NO"] = generateNextRealtorId(records);
+  }
+
+  const duplicate = records.find((entry) => {
+    return normalize(entry["REALTOR PHONE NO"]) === normalize(record["REALTOR PHONE NO"]) ||
+      normalize(entry["REALTOR EMAIL ADDRESS"]) === normalize(record["REALTOR EMAIL ADDRESS"] || "");
+  });
+
+  if (duplicate) {
+    return { status: 409, body: { error: "A realtor with this phone number or email already exists" } };
+  }
+
+  records.push(record);
+  await writeRecords(records);
+  return { status: 201, body: { record } };
 }
 
 function resolveLoginUser(records, loginValue, role) {
@@ -261,7 +303,7 @@ router.post("/login", async (req, res) => {
   const { loginValue, role, adminName, adminPassword } = req.body || {};
 
   if (role === "admin") {
-    if (normalize(adminName) !== normalize(ADMIN_NAME) || String(adminPassword || "") !== ADMIN_PASSWORD) {
+    if (!isValidAdminCredentials(adminName, adminPassword)) {
       return res.status(401).json({ error: "Invalid admin name or password" });
     }
 
@@ -292,29 +334,8 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/realtors", async (req, res) => {
-  const record = { ...(req.body || {}) };
-  const records = await readRecords();
-
-  if (!record["REALTORS NAME"] || !record["REALTOR PHONE NO"]) {
-    return res.status(400).json({ error: "REALTORS NAME and REALTOR PHONE NO are required" });
-  }
-
-  if (!record["REALTOR ID NO"] || !/^R-\d+$/.test(String(record["REALTOR ID NO"]).trim())) {
-    record["REALTOR ID NO"] = generateNextRealtorId(records);
-  }
-
-  const duplicate = records.find((entry) => {
-    return normalize(entry["REALTOR PHONE NO"]) === normalize(record["REALTOR PHONE NO"]) ||
-      normalize(entry["REALTOR EMAIL ADDRESS"]) === normalize(record["REALTOR EMAIL ADDRESS"] || "");
-  });
-
-  if (duplicate) {
-    return res.status(409).json({ error: "A realtor with this phone number or email already exists" });
-  }
-
-  records.push(record);
-  await writeRecords(records);
-  return res.status(201).json({ record });
+  const result = await createRealtorRecord(req.body);
+  return res.status(result.status).json(result.body);
 });
 
 router.post("/realtors/import", async (req, res) => {
@@ -343,6 +364,37 @@ router.post("/realtors/extract-image", async (req, res) => {
   } catch (error) {
     return res.status(error.status || 500).json({ error: error.message || "Unable to extract this image" });
   }
+});
+
+router.post("/realtors/screen-registration-form", async (req, res) => {
+  if (isFormScreeningRateLimited(req)) {
+    return res.status(429).json({ error: "Too many form screening requests. Try again in a minute." });
+  }
+
+  const { adminName, adminPassword } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to screen a registration form." });
+  }
+
+  try {
+    const { values, uncertainFields } = await extractRegistrationForm(
+      req.body?.frontImageData,
+      req.body?.backImageData
+    );
+    return res.json({ values, uncertainFields });
+  } catch (error) {
+    return res.status(error.status || 500).json({ error: error.message || "Unable to screen this registration form." });
+  }
+});
+
+router.post("/realtors/screen-registration-form/save", async (req, res) => {
+  const { adminName, adminPassword, record } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to save a screened Realtor record." });
+  }
+
+  const result = await createRealtorRecord(record);
+  return res.status(result.status).json(result.body);
 });
 
 router.post("/ai/chat", async (req, res) => {
