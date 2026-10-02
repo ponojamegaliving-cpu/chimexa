@@ -1,3 +1,5 @@
+const OpenAI = require("openai");
+
 const REALTOR_FORM_FIELDS = [
   "REALTORS NAME",
   "DATE OF REG",
@@ -54,12 +56,12 @@ function decodeImage(imageData, side) {
     throw createHttpError(`Upload a JPEG, PNG, or WebP image for the ${side} of the form.`, 400);
   }
 
-  const imageBuffer = Buffer.from(match[2], "base64");
-  if (!imageBuffer.length || imageBuffer.length > MAX_IMAGE_BYTES) {
+  const imageSize = Buffer.byteLength(match[2], "base64");
+  if (!imageSize || imageSize > MAX_IMAGE_BYTES) {
     throw createHttpError(`The ${side} image must be smaller than 3 MB after image compression.`, 413);
   }
 
-  return { dataUrl: `data:image/${match[1].toLowerCase()};base64,${match[2]}`, imageBuffer };
+  return `data:image/${match[1].toLowerCase()};base64,${match[2]}`;
 }
 
 function getVisionApiUrl() {
@@ -73,7 +75,10 @@ function getVisionApiUrl() {
   if (parsedUrl.protocol !== "https:" && parsedUrl.hostname !== "localhost" && parsedUrl.hostname !== "127.0.0.1") {
     throw createHttpError("The form vision API must use HTTPS unless it is hosted locally.", 503);
   }
-  return parsedUrl.toString();
+  parsedUrl.pathname = parsedUrl.pathname.replace(/\/chat\/completions\/?$/, "") || "/";
+  parsedUrl.search = "";
+  parsedUrl.hash = "";
+  return parsedUrl.toString().replace(/\/$/, "");
 }
 
 function normalizeVisionResult(content) {
@@ -106,28 +111,27 @@ async function extractRegistrationForm(frontImageData, backImageData) {
     throw createHttpError("Form screening is not configured. Set FORM_VISION_API_KEY on the server.", 503);
   }
 
-  let response;
+  let completion;
   try {
-    response = await fetch(getVisionApiUrl(), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      signal: AbortSignal.timeout(120_000),
-      body: JSON.stringify({
-        model: process.env.FORM_VISION_MODEL || "gpt-4o-mini",
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: FORM_VISION_PROMPT },
-            { type: "image_url", image_url: { url: frontImage.dataUrl, detail: "high" } },
-            { type: "image_url", image_url: { url: backImage.dataUrl, detail: "high" } }
-          ]
-        }]
-      })
+    const openai = new OpenAI({
+      apiKey,
+      baseURL: getVisionApiUrl(),
+      timeout: 120_000,
+      maxRetries: 0,
+      fetch: globalThis.fetch
+    });
+    completion = await openai.chat.completions.create({
+      model: process.env.FORM_VISION_MODEL || "gpt-4o-mini",
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: FORM_VISION_PROMPT },
+          { type: "image_url", image_url: { url: frontImage, detail: "high" } },
+          { type: "image_url", image_url: { url: backImage, detail: "high" } }
+        ]
+      }]
     });
   } catch (cause) {
     throw createHttpError(cause.name === "TimeoutError"
@@ -135,18 +139,7 @@ async function extractRegistrationForm(frontImageData, backImageData) {
       : "The configured form vision service is unavailable. Check its server URL and try again.", 503);
   }
 
-  if (!response.ok) {
-    throw createHttpError("The configured form vision service could not process the images. Check the server configuration and try again.", 502);
-  }
-
-  let payload;
-  try {
-    payload = await response.json();
-  } catch {
-    throw createHttpError("The form vision service returned an invalid response.", 502);
-  }
-
-  return normalizeVisionResult(payload?.choices?.[0]?.message?.content);
+  return normalizeVisionResult(completion.choices?.[0]?.message?.content);
 }
 
 module.exports = {

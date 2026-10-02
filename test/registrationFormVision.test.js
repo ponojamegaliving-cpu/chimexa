@@ -28,19 +28,16 @@ test("sends both form sides only to the separately configured vision service", a
     const values = Object.fromEntries(REALTOR_FORM_FIELDS.map((field) => [field, ""]));
     values["REALTORS NAME"] = "Ada Okafor";
     values["REALTOR PHONE NO"] = "08012345678";
-    return {
-      ok: true,
-      json: async () => ({
-        choices: [{ message: { content: JSON.stringify({ values, uncertainFields: ["BANK A/C NO"], ignored: "discard" }) } }]
-      })
-    };
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({ values, uncertainFields: ["BANK A/C NO"], ignored: "discard" }) } }]
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
   };
 
   try {
     const result = await extractRegistrationForm(frontImage, backImage);
     const requestBody = JSON.parse(requestOptions.body);
-    assert.equal(requestUrl, "https://vision.example.test/v1/chat/completions");
-    assert.equal(requestOptions.headers.Authorization, "Bearer test-vision-key");
+    assert.equal(String(requestUrl), "https://vision.example.test/v1/chat/completions");
+    assert.equal(requestOptions.headers.get("authorization"), "Bearer test-vision-key");
     assert.equal(requestBody.model, "separate-vision-model");
     assert.equal(requestBody.messages[0].content[1].image_url.url, frontImage);
     assert.equal(requestBody.messages[0].content[2].image_url.url, backImage);
