@@ -711,29 +711,27 @@ async function applyPhotoDraft(file) {
       photoField.value = dataUrl;
     }
 
-    if (photoOcrStatus) photoOcrStatus.textContent = "Reading the photo with local AI...";
-    if (photoOcrText) photoOcrText.textContent = "Processing image...";
+    if (photoOcrStatus) photoOcrStatus.textContent = "Trying AI mode first...";
+    if (photoOcrText) photoOcrText.textContent = "Processing image with local AI...";
+
+    try {
+      const suggestions = await requestLocalAiPhotoExtraction(await createAiImageData(file));
+      const foundCount = Object.values(suggestions).filter((value) => String(value || "").trim()).length;
+      if (foundCount) {
+        const populated = applyFieldSuggestions(suggestions);
+        if (photoOcrText) photoOcrText.textContent = JSON.stringify(suggestions, null, 2);
+        if (photoOcrStatus) photoOcrStatus.textContent = `AI mode found ${foundCount} field${foundCount === 1 ? "" : "s"}; ${populated} blank field${populated === 1 ? " was" : "s were"} suggested. Review and correct them before saving.`;
+        return;
+      }
+      if (photoOcrStatus) photoOcrStatus.textContent = "AI mode did not find enough data. Falling back to OCR...";
+    } catch (error) {
+      if (photoOcrStatus) photoOcrStatus.textContent = `${error.message} Falling back to OCR...`;
+    }
 
     if (!window.Tesseract) {
-      if (photoOcrStatus) photoOcrStatus.textContent = "Local AI is unavailable. Enter the details manually.";
+      if (photoOcrStatus) photoOcrStatus.textContent = "AI mode is unavailable and OCR is not loaded. Enter the details manually.";
+      return;
     }
-
-    if (window.Tesseract) {
-      try {
-        const suggestions = await requestLocalAiPhotoExtraction(await createAiImageData(file));
-        const foundCount = Object.values(suggestions).filter((value) => String(value || "").trim()).length;
-        if (foundCount) {
-          const populated = applyFieldSuggestions(suggestions);
-          if (photoOcrText) photoOcrText.textContent = JSON.stringify(suggestions, null, 2);
-          if (photoOcrStatus) photoOcrStatus.textContent = `Local AI found ${foundCount} field${foundCount === 1 ? "" : "s"}; ${populated} blank field${populated === 1 ? " was" : "s were"} suggested. Review and correct them before saving.`;
-          return;
-        }
-      } catch (error) {
-        if (photoOcrStatus) photoOcrStatus.textContent = `${error.message} Trying local OCR...`;
-      }
-    }
-
-    if (!window.Tesseract) return;
 
     let worker;
     try {
