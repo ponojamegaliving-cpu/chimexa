@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { MAX_REALTOR_RECORDS, validateRecordCapacity, importCsvRecords, writeRecords } = require('../server/googleSheets');
 const { records } = require('../server/data');
-const { resolveLoginUser, getReferrerRows } = require('../server/routes');
+const { resolveLoginUser, getReferrerRows, extractRealtorImage, askAiAssistant } = require('../server/routes');
 
 const TEMP_CSV_PATH = path.join(__dirname, '..', 'tmp-realtors.csv');
 
@@ -111,6 +111,35 @@ test('new records start from the normal Realtor ID sequence instead of a random-
   assert.equal(nextId, 'R-1001');
 });
 
+test('AI assistant answers questions using OpenAI-compatible chat completions', async () => {
+  const previousFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    assert.equal(url, 'https://api.openai.com/v1/chat/completions');
+    const request = JSON.parse(options.body);
+    assert.equal(request.model, 'gpt-4o-mini');
+    assert.equal(request.messages[0].role, 'system');
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: 'I found 2 realtors in the current data set.' } }]
+      })
+    };
+  };
+
+  try {
+    process.env.OPENAI_API_KEY = 'test-key';
+    const answer = await askAiAssistant([
+      { 'REALTORS NAME': 'Jane Doe', 'REALTOR PHONE NO': '08010000001' },
+      { 'REALTORS NAME': 'John Smith', 'REALTOR PHONE NO': '08010000002' }
+    ], 'How many realtors are in the list?');
+
+    assert.equal(answer, 'I found 2 realtors in the current data set.');
+  } finally {
+    global.fetch = previousFetch;
+    delete process.env.OPENAI_API_KEY;
+  }
+});
+
 test('profile photos are preserved as data URLs in persisted records', async () => {
   const photoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAF';
   const record = {
@@ -127,6 +156,32 @@ test('profile photos are preserved as data URLs in persisted records', async () 
 
   assert.ok(saved);
   assert.equal(saved['PROFILE PHOTO'], photoData);
+});
+
+test('local vision extraction sends images to Ollama and returns only realtor fields', async () => {
+  const previousFetch = global.fetch;
+  global.fetch = async (url, options) => {
+    assert.equal(url, 'http://127.0.0.1:11434/api/chat');
+    const request = JSON.parse(options.body);
+    assert.equal(request.model, 'qwen2.5vl:3b');
+    assert.equal(request.stream, false);
+    assert.equal(request.messages[0].images[0], 'YWJj');
+    return {
+      ok: true,
+      json: async () => ({
+        message: { content: JSON.stringify({ 'REALTORS NAME': 'Ada Okafor', 'REALTOR PHONE NO': '08012345678', EXTRA: 'ignore this' }) }
+      })
+    };
+  };
+
+  try {
+    const values = await extractRealtorImage('data:image/jpeg;base64,YWJj');
+    assert.equal(values['REALTORS NAME'], 'Ada Okafor');
+    assert.equal(values['REALTOR PHONE NO'], '08012345678');
+    assert.equal(values.EXTRA, undefined);
+  } finally {
+    global.fetch = previousFetch;
+  }
 });
 
 test('later CSV imports append to existing records instead of replacing them', async () => {

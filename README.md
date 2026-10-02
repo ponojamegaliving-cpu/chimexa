@@ -36,6 +36,7 @@ This project is a starter web app based on the field names from the Access file:
 - Referrer dashboard shows only records assigned to that referrer phone number
 - Realtor dashboard shows only their own record
 - Frontend is served by the same Express server
+- Realtor photo intake uses local Ollama vision AI with browser OCR fallback; no cloud API key is required
 
 ## Run it
 
@@ -71,6 +72,8 @@ Recommended deployment steps:
 4. Keep the app behind HTTPS and do not store secrets in source control.
 
 The app will bind to `0.0.0.0` on deployment so it can accept external traffic.
+Photo text recognition uses the OCR engine and English language model served by this app. Images are processed in the browser and are not sent to an external AI service.
+For local vision AI, install Ollama and run `ollama pull qwen2.5vl:3b`; keep Ollama running while using photo intake. The app calls the local Ollama service at `http://127.0.0.1:11434` and falls back to browser OCR if it is unavailable. Optional server variables are `OLLAMA_HOST` and `OLLAMA_VISION_MODEL`.
 
 ## Notes
 

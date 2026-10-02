@@ -66,7 +66,7 @@
               <button type="button" id="photoCaptureBtn" class="secondary-btn small-btn">Snap / Upload Photo</button>
             </div>
             <input id="photoIntakeInput" type="file" accept="image/*" capture="environment" />
-            <p id="photoOcrStatus" class="photo-ocr-status" aria-live="polite">Choose a clear photo of a realtor form to read its text.</p>
+            <p id="photoOcrStatus" class="photo-ocr-status" aria-live="polite">Choose a clear photo of a realtor form. Local Qwen AI will extract fields without a cloud API.</p>
             <div id="photoIntakePreviewWrap" class="photo-intake-preview-wrap hidden">
               <img id="photoIntakePreview" alt="Photo intake preview" />
             </div>
@@ -74,7 +74,7 @@
               <summary>Recognized text</summary>
               <pre id="photoOcrText">No image processed yet.</pre>
             </details>
-            <p class="photo-intake-help">Reads printed English text locally on this device. Check and correct the editable suggestions before saving into the Realtor table.</p>
+            <p class="photo-intake-help">Uses local Qwen vision AI first, then English OCR if Ollama is unavailable. Images stay on this computer; review and correct suggestions before saving.</p>
           </div>
 
           <form id="adminForm">
@@ -133,6 +133,22 @@
               <button type="submit">Save Realtor</button>
               <button type="button" id="cancelEditBtn" class="secondary-btn">Cancel</button>
             </div>
+          </form>
+        </div>
+
+        <div id="aiChatPanel" class="ai-chat-panel">
+          <div class="ai-chat-header">
+            <h3>AI mode</h3>
+            <span id="aiChatStatus" class="ai-chat-status">Ready</span>
+          </div>
+          <div id="aiChatThread" class="ai-chat-thread" aria-live="polite">
+            <div class="ai-message assistant">
+              Ask about realtor counts, referral summaries, or record trends.
+            </div>
+          </div>
+          <form id="aiChatForm" class="ai-chat-form">
+            <textarea id="aiChatInput" rows="3" placeholder="Ask the app about the realtor data..."></textarea>
+            <button type="submit" class="tool-button">Send</button>
           </form>
         </div>
 

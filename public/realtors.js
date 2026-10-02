@@ -30,6 +30,10 @@ const pasteExcelBtn = document.getElementById("pasteExcelBtn");
 const importPastedBtn = document.getElementById("importPastedBtn");
 const backToLoginBtn = document.getElementById("backToLoginBtn");
 const refreshTableBtn = document.getElementById("refreshTableBtn");
+const aiChatForm = document.getElementById("aiChatForm");
+const aiChatInput = document.getElementById("aiChatInput");
+const aiChatThread = document.getElementById("aiChatThread");
+const aiChatStatus = document.getElementById("aiChatStatus");
 
 let adminRows = [];
 let editingIndex = null;
@@ -225,6 +229,49 @@ function filterRows(rows, term) {
       return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(part));
     });
   });
+}
+
+function appendAssistantMessage(role, text) {
+  if (!aiChatThread) return;
+
+  const message = document.createElement("div");
+  message.className = `ai-message ${role}`;
+  message.textContent = text;
+  aiChatThread.appendChild(message);
+  aiChatThread.scrollTop = aiChatThread.scrollHeight;
+}
+
+async function submitAiChat(event) {
+  event.preventDefault();
+  if (!aiChatInput || !aiChatForm) return;
+
+  const prompt = String(aiChatInput.value || "").trim();
+  if (!prompt) return;
+
+  appendAssistantMessage("user", prompt);
+  aiChatInput.value = "";
+  if (aiChatStatus) aiChatStatus.textContent = "Thinking...";
+
+  try {
+    const response = await fetch("/api/ai/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, rows: adminRows })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      appendAssistantMessage("assistant", data.error || "AI is unavailable right now.");
+      if (aiChatStatus) aiChatStatus.textContent = "Error";
+      return;
+    }
+
+    appendAssistantMessage("assistant", data.answer || "No answer returned.");
+    if (aiChatStatus) aiChatStatus.textContent = "Ready";
+  } catch (error) {
+    appendAssistantMessage("assistant", "AI mode could not reach the server. Try again in a moment.");
+    if (aiChatStatus) aiChatStatus.textContent = "Error";
+  }
 }
 
 function renderCellValue(value, columnName) {
@@ -601,7 +648,10 @@ function extractPhotoFields(text) {
 }
 
 function applyOcrSuggestions(text) {
-  const suggestions = extractPhotoFields(text);
+  return applyFieldSuggestions(extractPhotoFields(text));
+}
+
+function applyFieldSuggestions(suggestions) {
   let populated = 0;
 
   Object.entries(suggestions).forEach(([name, value]) => {
@@ -615,6 +665,28 @@ function applyOcrSuggestions(text) {
   const idField = adminForm.elements.namedItem("REALTOR ID NO");
   if (idField && !idField.value) idField.value = generateNextRealtorId(adminRows);
   return populated;
+}
+
+async function createAiImageData(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg", 0.82);
+}
+
+async function requestLocalAiPhotoExtraction(imageData) {
+  const response = await fetch("/api/realtors/extract-image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageData })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Local AI extraction is unavailable.");
+  return result.values || {};
 }
 
 async function applyPhotoDraft(file) {
@@ -639,8 +711,29 @@ async function applyPhotoDraft(file) {
       photoField.value = dataUrl;
     }
 
-    if (photoOcrStatus) photoOcrStatus.textContent = "Reading text from the photo...";
+    if (photoOcrStatus) photoOcrStatus.textContent = "Reading the photo with local AI...";
     if (photoOcrText) photoOcrText.textContent = "Processing image...";
+
+    if (!window.Tesseract) {
+      if (photoOcrStatus) photoOcrStatus.textContent = "Local AI is unavailable. Enter the details manually.";
+    }
+
+    if (window.Tesseract) {
+      try {
+        const suggestions = await requestLocalAiPhotoExtraction(await createAiImageData(file));
+        const foundCount = Object.values(suggestions).filter((value) => String(value || "").trim()).length;
+        if (foundCount) {
+          const populated = applyFieldSuggestions(suggestions);
+          if (photoOcrText) photoOcrText.textContent = JSON.stringify(suggestions, null, 2);
+          if (photoOcrStatus) photoOcrStatus.textContent = `Local AI found ${foundCount} field${foundCount === 1 ? "" : "s"}; ${populated} blank field${populated === 1 ? " was" : "s were"} suggested. Review and correct them before saving.`;
+          return;
+        }
+      } catch (error) {
+        if (photoOcrStatus) photoOcrStatus.textContent = `${error.message} Trying local OCR...`;
+      }
+    }
+
+    if (!window.Tesseract) return;
 
     let worker;
     try {
@@ -650,7 +743,7 @@ async function applyPhotoDraft(file) {
         langPath: "/vendor/tessdata/eng/4.0.0",
         logger: (message) => {
           if (message.status === "recognizing text" && photoOcrStatus) {
-            photoOcrStatus.textContent = `Reading text from the photo... ${Math.round((message.progress || 0) * 100)}%`;
+            photoOcrStatus.textContent = `Reading text with local OCR... ${Math.round((message.progress || 0) * 100)}%`;
           }
         }
       });
@@ -660,7 +753,7 @@ async function applyPhotoDraft(file) {
       if (photoOcrText) photoOcrText.textContent = recognizedText || "No text found. Try a clearer, well-lit photo.";
       if (photoOcrStatus) {
         photoOcrStatus.textContent = recognizedText
-          ? `Text recognized. ${populated} blank field${populated === 1 ? " was" : "s were"} suggested; review and correct them before saving.`
+          ? `Local OCR found text. ${populated} blank field${populated === 1 ? " was" : "s were"} suggested; review before saving.`
           : "No text found. Try a clearer, well-lit photo.";
       }
     } catch (error) {
@@ -1052,6 +1145,7 @@ if (skipPhotoSuggestionBtn) {
 
 cancelEditBtn.addEventListener("click", resetAdminForm);
 adminForm.addEventListener("submit", saveAdminRecord);
+if (aiChatForm) aiChatForm.addEventListener("submit", submitAiChat);
 backToLoginBtn.addEventListener("click", redirectToLogin);
 refreshTableBtn.addEventListener("click", loadAdminRows);
 
