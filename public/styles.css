@@ -1162,3 +1162,263 @@ th {
     grid-column: auto;
   }
 }
+
+.theme-toggle {
+  position: fixed;
+  z-index: 1000;
+  top: 16px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 14px;
+  border: 1px solid rgba(242, 162, 58, 0.65);
+  border-radius: 999px;
+  background: rgba(24, 75, 43, 0.94);
+  color: #fff1d9;
+  box-shadow: 0 8px 22px rgba(8, 28, 16, 0.25);
+  font-size: 0.875rem;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  background: linear-gradient(135deg, #e98b2a, #d96d20);
+}
+
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid #f2a23a;
+  outline-offset: 3px;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background:
+    linear-gradient(135deg, rgba(8, 25, 16, 0.94), rgba(13, 43, 25, 0.9)),
+    url("https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1800&q=80") center/cover fixed no-repeat;
+  color: #e7eddf;
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] label,
+html[data-theme="dark"] .feature-card p,
+html[data-theme="dark"] .photo-intake-help,
+html[data-theme="dark"] .photo-ocr-status,
+html[data-theme="dark"] .photo-ocr-result,
+html[data-theme="dark"] .photo-review-header,
+html[data-theme="dark"] .photo-review-copy p,
+html[data-theme="dark"] .screening-admin-confirm label,
+html[data-theme="dark"] .screening-image-card label,
+html[data-theme="dark"] .screening-status,
+html[data-theme="dark"] .registration-required-note,
+html[data-theme="dark"] .registration-privacy-note,
+html[data-theme="dark"] .registration-prompt {
+  color: #e2eadc;
+}
+
+html[data-theme="dark"] .page-header h1,
+html[data-theme="dark"] .form-screening-page .page-header h1,
+html[data-theme="dark"] .hero-copy h1,
+html[data-theme="dark"] .registration-intro h1 {
+  color: #fff8e9;
+}
+
+html[data-theme="dark"] .login-box,
+html[data-theme="dark"] .dashboard-box,
+html[data-theme="dark"] .info-panel,
+html[data-theme="dark"] .ai-chat-panel,
+html[data-theme="dark"] .registration-card,
+html[data-theme="dark"] .screening-panel {
+  border-color: rgba(139, 180, 131, 0.34);
+  background: rgba(20, 39, 27, 0.96);
+  color: #e7eddf;
+}
+
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .admin-toolbar,
+html[data-theme="dark"] .admin-form,
+html[data-theme="dark"] .photo-intake-panel,
+html[data-theme="dark"] .photo-review-box,
+html[data-theme="dark"] .screening-image-card,
+html[data-theme="dark"] .screening-preview,
+html[data-theme="dark"] .ai-chat-thread {
+  border-color: rgba(139, 180, 131, 0.3);
+  background: #243a2b;
+  color: #e7eddf;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .registration-field input,
+html[data-theme="dark"] .registration-field select,
+html[data-theme="dark"] .screening-preview,
+html[data-theme="dark"] .photo-ocr-result pre {
+  border-color: #526b53;
+  background-color: #17291d;
+  color: #f1f3e9;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #aab8a5;
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
+  border-color: #f2a23a;
+  box-shadow: 0 0 0 4px rgba(242, 162, 58, 0.2);
+}
+
+html[data-theme="dark"] button.secondary-btn {
+  border-color: #587151;
+  background: #304636;
+  color: #f1f3e9;
+}
+
+html[data-theme="dark"] button.secondary-btn:hover {
+  border-color: #e9a04c;
+  background: #594324;
+}
+
+html[data-theme="dark"] .table-wrap {
+  border-color: #526b53;
+}
+
+html[data-theme="dark"] table {
+  background: #1b2d20;
+}
+
+html[data-theme="dark"] th,
+html[data-theme="dark"] td {
+  border-color: #435b45;
+  color: #e7eddf;
+}
+
+html[data-theme="dark"] th {
+  background: linear-gradient(180deg, #304b35, #263c2c);
+  color: #f4c47f;
+}
+
+html[data-theme="dark"] .screening-table tbody th {
+  background: #263c2c;
+}
+
+html[data-theme="dark"] .new-registration-row td {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(37, 61, 43, 0.96),
+    rgba(37, 61, 43, 0.96) 8px,
+    rgba(31, 52, 37, 0.96) 8px,
+    rgba(31, 52, 37, 0.96) 16px
+  );
+}
+
+html[data-theme="dark"] .empty-fill-cell {
+  background: rgba(34, 55, 39, 0.8);
+}
+
+html[data-theme="dark"] .summary-box,
+html[data-theme="dark"] .badge,
+html[data-theme="dark"] .ai-chat-status {
+  border-color: #587151;
+  background: #304636;
+  color: #d9edcf;
+}
+
+html[data-theme="dark"] .offline-status.online {
+  border-color: #4b8053;
+  background: #1f422b;
+  color: #b9e2b4;
+}
+
+html[data-theme="dark"] .offline-status.offline {
+  border-color: #a56a37;
+  background: #49341e;
+  color: #ffd08a;
+}
+
+html[data-theme="dark"] .screening-privacy {
+  border-left-color: #e98b2a;
+  background: #42351f;
+  color: #f2e3c5;
+}
+
+html[data-theme="dark"] .screening-row-needs-review td {
+  background: #42391f;
+}
+
+html[data-theme="dark"] .screening-needs-review {
+  color: #ffd080;
+}
+
+html[data-theme="dark"] .screening-suggested {
+  color: #a8d59e;
+}
+
+html[data-theme="dark"] .registration-status-success {
+  border-color: #4e8054;
+  background: #1e3b27;
+  color: #c4e8be;
+}
+
+html[data-theme="dark"] .registration-status-error,
+html[data-theme="dark"] .screening-status.error {
+  border-color: #a5534b;
+  background: #482622;
+  color: #ffc1b8;
+}
+
+html[data-theme="dark"] .registration-prompt a,
+html[data-theme="dark"] .registration-back-link {
+  color: #f4b66a;
+}
+
+html[data-theme="dark"] .admin-entry-icon {
+  border-color: rgba(175, 204, 161, 0.28);
+  color: #c2d5b8;
+}
+
+html[data-theme="dark"] .admin-entry-icon:hover,
+html[data-theme="dark"] .admin-entry-icon:focus-visible {
+  background: #304636;
+  color: #f4b66a;
+}
+
+html[data-theme="dark"] .ai-message.assistant {
+  background: #304636;
+  color: #e7eddf;
+}
+
+html[data-theme="dark"] .ai-message.user {
+  background: #28613a;
+  color: #fff8e9;
+}
+
+html[data-theme="dark"] .registration-intro {
+  background: linear-gradient(120deg, #123b25, #205d37 72%, #a65320);
+}
+
+@media (max-width: 600px) {
+  .theme-toggle {
+    top: 10px;
+    right: 10px;
+    min-height: 38px;
+    padding: 7px 11px;
+    font-size: 0.8rem;
+  }
+}

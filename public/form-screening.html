@@ -19,8 +19,8 @@
       </header>
 
       <section class="dashboard-box screening-panel">
-        <p>Upload both sides of one completed Realtor registration form. The separate vision AI will use the existing Realtor field names as its output format and combine details visible on either side.</p>
-        <p class="screening-privacy"><strong>Privacy:</strong> When you select “Analyze both sides,” the images are sent to the vision service configured on this app’s server. They are not sent to the existing OCR or Ollama service and are not saved by this page. Confirm that the configured service is approved for the personal and financial information on the form.</p>
+        <p>Upload both sides of one completed Realtor registration form. Text is read locally in your browser, then local Ollama combines and organizes the recognized details using the existing Realtor field names.</p>
+        <p class="screening-privacy"><strong>Privacy:</strong> With the default local setup, photos are OCR-processed in your browser and only the recognized text is sent to the Ollama service configured for this app (default: 127.0.0.1:11434). Photos are not sent to an external vision provider or saved by this page. If the app server is on another computer, the recognized text is sent to that server’s Ollama service.</p>
         <div class="screening-admin-confirm">
           <label for="adminPassword">Admin password (confirmed separately for each analyze or save request)</label>
           <input id="adminPassword" type="password" autocomplete="current-password" required />
@@ -66,6 +66,8 @@
         </div>
       </section>
     </main>
+    <script src="/theme.js"></script>
+    <script src="/vendor/tesseract/tesseract.min.js"></script>
     <script src="/form-screening.js"></script>
   </body>
 </html>
