@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173f66" />
+    <title>Realtor Registration | Crystal Garden Estate Realtors</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="registration-page">
+      <header class="registration-header">
+        <a class="registration-brand" href="/" aria-label="Crystal Garden Estate Realtors home">
+          <span class="brand-mark">CG</span>
+          <span class="brand-copy">
+            <span class="brand-kicker">Crystal Garden</span>
+            <strong>Estate Realtors</strong>
+          </span>
+        </a>
+        <a class="registration-back-link" href="/">Already registered? Sign in</a>
+      </header>
+
+      <section class="registration-card" aria-labelledby="registrationTitle">
+        <div class="registration-intro">
+          <span class="eyebrow">Join our network</span>
+          <h1 id="registrationTitle">Start your realtor registration</h1>
+          <p>Tell us a little about yourself. Our team will use these details to set up your realtor profile.</p>
+        </div>
+
+        <form id="registrationForm" class="registration-form">
+          <h2>Registration questionnaire</h2>
+          <div class="registration-grid">
+            <div class="registration-field registration-field-wide">
+              <label for="realtorName">What is your full name? (REALTORS NAME) <span aria-hidden="true">*</span></label>
+              <input id="realtorName" name="REALTORS NAME" type="text" autocomplete="name" required maxlength="200" />
+            </div>
+            <div class="registration-field">
+              <label for="realtorPhone">What is your phone number? (REALTOR PHONE NO) <span aria-hidden="true">*</span></label>
+              <input id="realtorPhone" name="REALTOR PHONE NO" type="tel" autocomplete="tel" required maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="realtorEmail">What is your email address? (REALTOR EMAIL ADDRESS) <span aria-hidden="true">*</span></label>
+              <input id="realtorEmail" name="REALTOR EMAIL ADDRESS" type="email" autocomplete="email" required maxlength="200" />
+            </div>
+            <div class="registration-field">
+              <label for="registrationDate">What is your registration date? (DATE OF REG)</label>
+              <input id="registrationDate" name="DATE OF REG" type="date" readonly />
+            </div>
+            <div class="registration-field">
+              <label for="realtorId">What is your realtor ID number? (REALTOR ID NO)</label>
+              <input id="realtorId" name="REALTOR ID NO" type="text" placeholder="Assigned after submission" readonly />
+            </div>
+            <div class="registration-field">
+              <label for="gender">How do you describe your gender? (GENDER)</label>
+              <select id="gender" name="GENDER">
+                <option value="">Select an option</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+            </div>
+            <div class="registration-field">
+              <label for="dateOfBirth">What is your date of birth? (DATE OF BIRTH)</label>
+              <input id="dateOfBirth" name="DATE OF BIRTH" type="date" autocomplete="bday" />
+            </div>
+            <div class="registration-field registration-field-wide">
+              <label for="address">What is your residential address? (ADDRESS OF REALTOR)</label>
+              <input id="address" name="ADDRESS OF REALTOR" type="text" autocomplete="street-address" maxlength="300" />
+            </div>
+            <div class="registration-field">
+              <label for="country">What country are you located in? (COUNTRY OF LOCATION)</label>
+              <input id="country" name="COUNTRY OF LOCATION" type="text" autocomplete="country-name" maxlength="100" />
+            </div>
+            <div class="registration-field">
+              <label for="registrationPlace">Where are you registering? (PLACE OF REG)</label>
+              <input id="registrationPlace" name="PLACE OF REG" type="text" maxlength="150" />
+            </div>
+            <div class="registration-field">
+              <label for="stateCode">What is your state code? (STATE CODE)</label>
+              <input id="stateCode" name="STATE CODE" type="text" maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="stationedCity">What city or LGA are you stationed in? (STATIONED CITY/LGA)</label>
+              <input id="stationedCity" name="STATIONED CITY/LGA" type="text" maxlength="150" />
+            </div>
+            <div class="registration-field">
+              <label for="bankAccountNumber">What is your bank account number? (BANK A/C NO)</label>
+              <input id="bankAccountNumber" name="BANK A/C NO" type="text" inputmode="numeric" maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="bankAccountName">What name is on your bank account? (BANK A/C NAME)</label>
+              <input id="bankAccountName" name="BANK A/C NAME" type="text" maxlength="200" />
+            </div>
+            <div class="registration-field">
+              <label for="bankName">Which bank do you use? (BANK)</label>
+              <input id="bankName" name="BANK" type="text" maxlength="150" />
+            </div>
+            <div class="registration-field">
+              <label for="nextOfKinName">What is your next of kin's name? (REALTOR NEXT OF KIN NAME)</label>
+              <input id="nextOfKinName" name="REALTOR NEXT OF KIN NAME" type="text" maxlength="200" />
+            </div>
+            <div class="registration-field">
+              <label for="nextOfKinAddress">What is your next of kin's address? (NEXT OF KIN ADDRESS)</label>
+              <input id="nextOfKinAddress" name="NEXT OF KIN ADDRESS" type="text" maxlength="300" />
+            </div>
+            <div class="registration-field">
+              <label for="nextOfKinPhone">What is your next of kin's phone number? (NEXT OF KIN PHONE NO)</label>
+              <input id="nextOfKinPhone" name="NEXT OF KIN PHONE NO" type="tel" maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="refereeName">What is your referee's name? (REFEREE NAME)</label>
+              <input id="refereeName" name="REFEREE NAME" type="text" autocomplete="off" maxlength="200" />
+            </div>
+            <div class="registration-field">
+              <label for="refereePhone">What is your referee's phone number? (REFEREE PHONE NO)</label>
+              <input id="refereePhone" name="REFEREE PHONE NO" type="tel" autocomplete="off" maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="refereeBankName">What is your referee's bank name? (REFEREE BANK NAME)</label>
+              <input id="refereeBankName" name="REFEREE BANK NAME" type="text" maxlength="150" />
+            </div>
+            <div class="registration-field">
+              <label for="refereeBankAccountNumber">What is your referee's bank account number? (REFEREE BANK A/C NO)</label>
+              <input id="refereeBankAccountNumber" name="REFEREE BANK A/C NO" type="text" inputmode="numeric" maxlength="50" />
+            </div>
+            <div class="registration-field">
+              <label for="refereeAccountName">What name is on your referee's bank account? (REFEREE A/C NAME)</label>
+              <input id="refereeAccountName" name="REFEREE A/C NAME" type="text" maxlength="200" />
+            </div>
+          </div>
+          <p class="registration-required-note"><span aria-hidden="true">*</span> Required fields</p>
+          <p id="registrationStatus" class="registration-status" role="status" aria-live="polite"></p>
+          <button id="registrationSubmit" class="registration-submit" type="submit">Submit registration</button>
+          <p class="registration-privacy-note">Your information will be used to create your realtor profile.</p>
+        </form>
+      </section>
+    </main>
+    <script src="/register.js"></script>
+  </body>
+</html>

@@ -204,7 +204,7 @@ function parseSavedUser() {
 
 function redirectToLogin() {
   localStorage.removeItem("realtorCurrentUser");
-  window.location.href = "/";
+  window.location.href = "/admin";
 }
 
 function generateNextRealtorId(rows) {

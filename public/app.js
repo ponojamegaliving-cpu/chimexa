@@ -1,11 +1,8 @@
 const loginBtn = document.getElementById("loginBtn");
 const loadDashboardBtn = document.getElementById("loadDashboardBtn");
 const loginValueInput = document.getElementById("loginValue");
-const adminNameInput = document.getElementById("adminName");
-const adminPasswordInput = document.getElementById("adminPassword");
 const roleSelect = document.getElementById("role");
 const phoneEmailFields = document.getElementById("phoneEmailFields");
-const adminCredentialFields = document.getElementById("adminCredentialFields");
 const result = document.getElementById("result");
 const adminOnlyBox = document.getElementById("adminOnlyBox");
 const adminTableContainer = document.getElementById("adminTableContainer");
@@ -27,9 +24,7 @@ let adminRows = [];
 let editingIndex = null;
 
 function updateLoginFields() {
-  const isAdmin = roleSelect.value === "admin";
-  phoneEmailFields.style.display = isAdmin ? "none" : "block";
-  adminCredentialFields.style.display = isAdmin ? "block" : "none";
+  phoneEmailFields.style.display = "block";
 }
 
 roleSelect.addEventListener("change", updateLoginFields);
@@ -363,38 +358,7 @@ loginBtn.addEventListener("click", async () => {
   const role = roleSelect.value;
 
   if (role === "admin") {
-    const adminName = adminNameInput.value.trim();
-    const adminPassword = adminPasswordInput.value.trim();
-
-    if (!adminName || !adminPassword) {
-      result.innerHTML = "<p>Please enter the admin name and password.</p>";
-      adminOnlyBox.style.display = "none";
-      return;
-    }
-
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, adminName, adminPassword })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      result.innerHTML = `<p>${data.error}</p>`;
-      adminOnlyBox.style.display = "none";
-      return;
-    }
-
-    currentUser = data.user;
-    localStorage.setItem("realtorCurrentUser", JSON.stringify(currentUser));
-    result.innerHTML = `
-      <p><strong>Logged in as:</strong> ${currentUser.name}</p>
-      <p><strong>Role:</strong> <span class="badge">${currentUser.role}</span></p>
-    `;
-
-    adminOnlyBox.style.display = "block";
-    window.location.href = "/realtors.html";
+    window.location.href = "/admin";
     return;
   }
 

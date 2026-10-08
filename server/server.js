@@ -18,6 +18,10 @@ app.use("/vendor/tesseract-core", express.static(path.join(__dirname, "../node_m
 app.use("/vendor/tessdata/eng", express.static(path.join(__dirname, "../node_modules/@tesseract.js-data/eng")));
 app.use("/api", apiRoutes);
 
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/admin.html"));
+});
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/index.html"));
 });

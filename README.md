@@ -32,6 +32,8 @@ This project is a starter web app based on the field names from the Access file:
 ## Features
 
 - Login by phone number or email
+- Public realtor registration at `/register.html`
+- Separate administrator sign-in at `/admin`
 - Admin dashboard shows all records
 - Referrer dashboard shows only records assigned to that referrer phone number
 - Realtor dashboard shows only their own record

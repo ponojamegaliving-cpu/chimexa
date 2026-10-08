@@ -43,7 +43,6 @@
 
           <label for="role">Role</label>
           <select id="role">
-            <option value="admin">Admin</option>
             <option value="referrer">Referrer</option>
             <option value="realtor" selected>Realtor</option>
           </select>
@@ -53,15 +52,9 @@
             <input id="loginValue" type="text" placeholder="Enter phone or email" />
           </div>
 
-          <div id="adminCredentialFields" style="display: none;">
-            <label for="adminName">Admin name</label>
-            <input id="adminName" type="text" placeholder="Enter admin name" />
-
-            <label for="adminPassword">Password</label>
-            <input id="adminPassword" type="password" placeholder="Enter password" />
-          </div>
-
           <button id="loginBtn">Login</button>
+          <p class="registration-prompt">New to the network? <a href="/register.html">Register as a realtor</a></p>
+          <p class="registration-prompt">Administrator? <a href="/admin">Sign in to the admin area</a></p>
         </div>
 
         <aside class="info-panel">

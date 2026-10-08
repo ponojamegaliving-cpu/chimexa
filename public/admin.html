@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173f66" />
+    <title>Admin Sign In | Crystal Garden Estate Realtors</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="registration-page">
+      <header class="registration-header">
+        <a class="registration-brand" href="/" aria-label="Crystal Garden Estate Realtors home">
+          <span class="brand-mark">CG</span>
+          <span class="brand-copy">
+            <span class="brand-kicker">Crystal Garden</span>
+            <strong>Estate Realtors</strong>
+          </span>
+        </a>
+        <a class="registration-back-link" href="/">Back to the main site</a>
+      </header>
+
+      <section class="registration-card admin-signin-card" aria-labelledby="adminSignInTitle">
+        <div class="registration-intro">
+          <span class="eyebrow">Administrator access</span>
+          <h1 id="adminSignInTitle">Sign in to the admin area</h1>
+          <p>Use your administrator credentials to manage realtor records.</p>
+        </div>
+
+        <form id="adminLoginForm" class="registration-form">
+          <div class="registration-field">
+            <label for="adminName">Admin name</label>
+            <input id="adminName" name="adminName" type="text" autocomplete="username" required />
+          </div>
+          <div class="registration-field">
+            <label for="adminPassword">Password</label>
+            <input id="adminPassword" name="adminPassword" type="password" autocomplete="current-password" required />
+          </div>
+          <p id="adminLoginStatus" class="registration-status" role="status" aria-live="polite"></p>
+          <button id="adminLoginSubmit" class="registration-submit" type="submit">Sign in</button>
+        </form>
+      </section>
+    </main>
+    <script src="/admin.js"></script>
+  </body>
+</html>
