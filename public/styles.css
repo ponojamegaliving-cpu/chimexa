@@ -941,6 +941,41 @@ th {
   text-decoration: underline;
 }
 
+.admin-entry {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.admin-entry-icon {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(29, 54, 86, 0.14);
+  border-radius: 50%;
+  color: #61758a;
+  opacity: 0.72;
+  transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-entry-icon:hover,
+.admin-entry-icon:focus-visible {
+  background: #edf3fe;
+  color: #1d5b91;
+  opacity: 1;
+}
+
+.admin-entry-icon:focus-visible {
+  outline: 3px solid rgba(110, 168, 254, 0.5);
+  outline-offset: 2px;
+}
+
+.admin-entry-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
 .registration-page {
   width: min(100% - 32px, 860px);
   margin: 0 auto;
