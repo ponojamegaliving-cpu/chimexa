@@ -32,13 +32,11 @@ const credentials = {
 
 function sampleProperty(overrides = {}) {
   return {
-    title: "Sunny Lekki apartment",
-    description: "A comfortable apartment.",
-    propertyType: "apartment",
-    listingType: "rent",
+    title: "Sunny Lekki residential land",
+    description: "A residential plot for sale.",
+    propertyType: "land",
+    listingType: "sale",
     price: 2500000,
-    bedrooms: 2,
-    bathrooms: 2,
     areaSqm: 110,
     address: "12 Example Road",
     city: "Lekki",
@@ -71,19 +69,25 @@ test("starts with labeled demo listings and returns only approved public propert
   const properties = await readProperties();
   assert.equal(properties.length, demoProperties.length);
   assert.ok(properties.every((property) => property.isDemo));
+  assert.ok(properties.every((property) => property.propertyType === "land" && property.listingType === "sale"));
   assert.equal(filterProperties([
     ...properties,
+    { ...sampleProperty({ propertyType: "house" }), id: "old-home", status: "approved", isDemo: false },
+    { ...sampleProperty({ listingType: "rent" }), id: "old-rental", status: "approved", isDemo: false },
     { ...sampleProperty(), id: "pending", status: "pending", isDemo: false }
   ]).length, demoProperties.length);
-  assert.equal(filterProperties(properties, { city: "Lagos", propertyType: "apartment" }).length, 1);
-  assert.equal(filterProperties(properties, { listingType: "rent", maxPrice: "13000000" }).length, 1);
+  assert.equal(filterProperties(properties, { city: "Lagos", propertyType: "land", listingType: "sale" }).length, 3);
   assert.throws(() => filterProperties(properties, { maxPrice: "not-a-price" }), /valid non-negative amount/);
+  assert.throws(() => filterProperties(properties, { propertyType: "house" }), /valid property type filter/);
+  assert.throws(() => filterProperties(properties, { listingType: "rent" }), /valid listing type filter/);
 });
 
 test("validates property fields and accepts only HTTPS photo URLs", () => {
   assert.throws(() => createProperty(sampleProperty({ price: -1 }), { name: "Agent" }, "pending"), /Price must be greater/);
   assert.throws(() => createProperty(sampleProperty({ imageUrls: ["http://images.example.com/home.jpg"] }), { name: "Agent" }, "pending"), /HTTPS/);
-  assert.throws(() => createProperty(sampleProperty({ propertyType: "unknown" }), { name: "Agent" }, "pending"), /property type/);
+  assert.throws(() => createProperty(sampleProperty({ propertyType: "house" }), { name: "Agent" }, "pending"), /property type/);
+  assert.throws(() => createProperty(sampleProperty({ listingType: "rent" }), { name: "Agent" }, "pending"), /Only land listings for sale/);
+  assert.throws(() => createProperty(sampleProperty({ areaSqm: 0 }), { name: "Agent", phone: "08000000000" }, "pending"), /Land area/);
   assert.throws(() => createProperty(sampleProperty(), { name: "Agent" }, "pending"), /Agent phone is required/);
 });
 
@@ -170,7 +174,7 @@ test("registered agents submit pending listings and admins approve or delete the
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...credentials,
-      property: sampleProperty({ title: "Admin published home" }),
+      property: sampleProperty({ title: "Admin published land" }),
       agentName: "Jane Agent",
       agentPhone: "08000000000",
       agentEmail: "agent@example.com"
@@ -186,4 +190,21 @@ test("demo listings cannot be changed or deleted", () => {
   const properties = structuredClone(demoProperties);
   assert.throws(() => updatePropertyStatus(properties, properties[0].id, "rejected"), /Demo listings/);
   assert.throws(() => deleteProperty(properties, properties[0].id), /Demo listings/);
+});
+
+test("older home and rental listings stay hidden and cannot be approved", () => {
+  const olderHouse = {
+    ...sampleProperty({ propertyType: "house" }),
+    id: "older-house",
+    status: "pending",
+    isDemo: false
+  };
+  const olderRental = {
+    ...sampleProperty({ listingType: "rent" }),
+    id: "older-rental",
+    status: "approved",
+    isDemo: false
+  };
+  assert.deepEqual(filterProperties([olderHouse, olderRental]), []);
+  assert.throws(() => updatePropertyStatus([olderHouse], olderHouse.id, "approved"), /Only land listings for sale/);
 });

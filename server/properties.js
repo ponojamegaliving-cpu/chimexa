@@ -2,28 +2,26 @@ const fs = require("fs/promises");
 const path = require("path");
 const { randomUUID } = require("crypto");
 
-const PROPERTY_TYPES = ["house", "apartment", "land", "commercial"];
-const LISTING_TYPES = ["sale", "rent", "shortlet"];
+const PROPERTY_TYPES = ["land"];
+const LISTING_TYPES = ["sale"];
 const LISTING_STATUSES = ["pending", "approved", "rejected"];
 const MAX_IMAGES = 10;
 const MAX_PROPERTIES = 10000;
 
 const demoProperties = [
   {
-    id: "demo-lekki-family-home",
-    title: "Demo: Contemporary family home in Lekki",
-    description: "Sample listing for exploring the marketplace. Property details and availability are fictional.",
-    propertyType: "house",
+    id: "demo-land-lekki",
+    title: "Demo: Residential plot in Lekki",
+    description: "Fictional sample land listing for exploring the marketplace. Verify land title, survey, boundaries, and availability before any real transaction.",
+    propertyType: "land",
     listingType: "sale",
-    price: 185000000,
+    price: 65000000,
     currency: "NGN",
-    bedrooms: 4,
-    bathrooms: 4,
-    areaSqm: 320,
+    areaSqm: 600,
     address: "Sample address, Lekki",
     city: "Lekki",
     state: "Lagos",
-    imageUrls: ["https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85"],
+    imageUrls: ["https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=85"],
     agentName: "Demo agent",
     agentPhone: "",
     agentEmail: "",
@@ -32,20 +30,18 @@ const demoProperties = [
     createdAt: "2026-01-10T10:00:00.000Z"
   },
   {
-    id: "demo-ikoyi-apartment",
-    title: "Demo: Bright two-bedroom apartment in Ikoyi",
-    description: "Sample listing for exploring the marketplace. Property details and availability are fictional.",
-    propertyType: "apartment",
-    listingType: "rent",
-    price: 12500000,
+    id: "demo-land-ikoyi",
+    title: "Demo: Residential plot in Ikoyi",
+    description: "Fictional sample land listing for exploring the marketplace. Verify land title, survey, boundaries, and availability before any real transaction.",
+    propertyType: "land",
+    listingType: "sale",
+    price: 140000000,
     currency: "NGN",
-    bedrooms: 2,
-    bathrooms: 2,
-    areaSqm: 140,
+    areaSqm: 450,
     address: "Sample address, Ikoyi",
     city: "Ikoyi",
     state: "Lagos",
-    imageUrls: ["https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1200&q=85"],
+    imageUrls: ["https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85"],
     agentName: "Demo agent",
     agentPhone: "",
     agentEmail: "",
@@ -54,20 +50,18 @@ const demoProperties = [
     createdAt: "2026-01-11T10:00:00.000Z"
   },
   {
-    id: "demo-abuja-terrace",
-    title: "Demo: Modern terrace home in Abuja",
-    description: "Sample listing for exploring the marketplace. Property details and availability are fictional.",
-    propertyType: "house",
+    id: "demo-land-gwarinpa",
+    title: "Demo: Residential plot in Gwarinpa",
+    description: "Fictional sample land listing for exploring the marketplace. Verify land title, survey, boundaries, and availability before any real transaction.",
+    propertyType: "land",
     listingType: "sale",
-    price: 145000000,
+    price: 48000000,
     currency: "NGN",
-    bedrooms: 3,
-    bathrooms: 3,
-    areaSqm: 235,
+    areaSqm: 500,
     address: "Sample address, Gwarinpa",
     city: "Gwarinpa",
     state: "Abuja",
-    imageUrls: ["https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85"],
+    imageUrls: ["https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=85"],
     agentName: "Demo agent",
     agentPhone: "",
     agentEmail: "",
@@ -76,15 +70,13 @@ const demoProperties = [
     createdAt: "2026-01-12T10:00:00.000Z"
   },
   {
-    id: "demo-ajah-land",
+    id: "demo-land-ajah",
     title: "Demo: Residential plot in Ajah",
-    description: "Sample listing for exploring the marketplace. Property details and availability are fictional.",
+    description: "Fictional sample land listing for exploring the marketplace. Verify land title, survey, boundaries, and availability before any real transaction.",
     propertyType: "land",
     listingType: "sale",
     price: 42000000,
     currency: "NGN",
-    bedrooms: 0,
-    bathrooms: 0,
     areaSqm: 500,
     address: "Sample address, Ajah",
     city: "Ajah",
@@ -158,11 +150,11 @@ function normalizeSearch(value) {
   return String(value || "").trim().toLocaleLowerCase();
 }
 
-function parseOptionalFilterNumber(value, label, integer = false) {
+function parseOptionalFilterNumber(value, label) {
   if (value === undefined || value === "") return null;
   const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0 || (integer && !Number.isSafeInteger(parsed))) {
-    const error = new Error(`${label} must be a valid non-negative ${integer ? "whole number" : "amount"}.`);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    const error = new Error(`${label} must be a valid non-negative amount.`);
     error.status = 400;
     throw error;
   }
@@ -176,7 +168,6 @@ function filterProperties(properties, query = {}) {
   const listingType = normalizeSearch(query.listingType);
   const minimumPrice = parseOptionalFilterNumber(query.minPrice, "Minimum price");
   const maximumPrice = parseOptionalFilterNumber(query.maxPrice, "Maximum price");
-  const minimumBedrooms = parseOptionalFilterNumber(query.bedrooms, "Bedrooms", true);
   if (propertyType && !PROPERTY_TYPES.includes(propertyType)) {
     const error = new Error("Choose a valid property type filter.");
     error.status = 400;
@@ -189,6 +180,7 @@ function filterProperties(properties, query = {}) {
   }
 
   return properties
+    .filter((property) => property.propertyType === "land" && property.listingType === "sale")
     .filter((property) => property.status === "approved" || property.isDemo === true)
     .filter((property) => !search || [
       property.title,
@@ -203,7 +195,6 @@ function filterProperties(properties, query = {}) {
     .filter((property) => !listingType || property.listingType === listingType)
     .filter((property) => minimumPrice === null || property.price >= minimumPrice)
     .filter((property) => maximumPrice === null || property.price <= maximumPrice)
-    .filter((property) => minimumBedrooms === null || property.bedrooms >= minimumBedrooms)
     .sort((first, second) => String(second.createdAt).localeCompare(String(first.createdAt)));
 }
 
@@ -236,15 +227,13 @@ function validatePropertyInput(input) {
   const propertyType = String(input?.propertyType || "").trim().toLowerCase();
   const listingType = String(input?.listingType || "").trim().toLowerCase();
   const price = Number(input?.price);
-  const bedrooms = Number(input?.bedrooms ?? 0);
-  const bathrooms = Number(input?.bathrooms ?? 0);
   const areaSqm = Number(input?.areaSqm ?? 0);
 
   if (!PROPERTY_TYPES.includes(propertyType)) throw new Error("Choose a valid property type.");
-  if (!LISTING_TYPES.includes(listingType)) throw new Error("Choose sale, rent, or shortlet.");
+  if (!LISTING_TYPES.includes(listingType)) throw new Error("Only land listings for sale are accepted.");
   if (!Number.isFinite(price) || price <= 0) throw new Error("Price must be greater than zero.");
-  if (![bedrooms, bathrooms, areaSqm].every((value) => Number.isSafeInteger(value) && value >= 0)) {
-    throw new Error("Bedrooms, bathrooms, and floor area must be whole non-negative numbers.");
+  if (!Number.isFinite(areaSqm) || areaSqm <= 0) {
+    throw new Error("Land area must be greater than zero square metres.");
   }
 
   return {
@@ -254,8 +243,6 @@ function validatePropertyInput(input) {
     listingType,
     price,
     currency: "NGN",
-    bedrooms,
-    bathrooms,
     areaSqm,
     address: cleanText(input?.address, "Address", 200, true),
     city: cleanText(input?.city, "City", 80, true),
@@ -283,6 +270,9 @@ function updatePropertyStatus(properties, id, status) {
   const property = properties.find((entry) => entry.id === id);
   if (!property) return null;
   if (property.isDemo) throw new Error("Demo listings cannot be changed.");
+  if (status === "approved" && (property.propertyType !== "land" || property.listingType !== "sale")) {
+    throw new Error("Only land listings for sale can be approved. Delete this older non-land listing.");
+  }
   property.status = status;
   return property;
 }

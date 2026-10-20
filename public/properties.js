@@ -6,10 +6,9 @@ const propertyDialog = document.getElementById("propertyDialog");
 const propertyDetails = document.getElementById("propertyDetails");
 const savedToggle = document.getElementById("savedToggle");
 const savedCount = document.getElementById("savedCount");
-const bedroomFilter = document.getElementById("bedroomFilter");
 const propertySubmissionForm = document.getElementById("propertySubmissionForm");
 const submissionStatus = document.getElementById("submissionStatus");
-const FAVORITES_KEY = "crystalGardenSavedProperties";
+const FAVORITES_KEY = "crystalGardenSavedLandListings";
 let properties = [];
 let showFavoritesOnly = false;
 
@@ -45,19 +44,21 @@ function writeFavorites(favorites) {
   }
 }
 
-function formatPrice(price, listingType) {
-  const value = new Intl.NumberFormat("en-NG", {
+function formatPrice(price) {
+  return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     maximumFractionDigits: 0
   }).format(Number(price) || 0);
-  if (listingType === "rent") return `${value} / year`;
-  if (listingType === "shortlet") return `${value} / night`;
-  return value;
 }
 
 function propertyLocation(property) {
   return [property.city, property.state].filter(Boolean).join(", ");
+}
+
+function formatLandArea(value) {
+  const area = Number(value);
+  return Number.isFinite(area) && area > 0 ? `${area.toLocaleString()} m²` : "Land size not provided";
 }
 
 function toWhatsAppPhone(value) {
@@ -67,12 +68,8 @@ function toWhatsAppPhone(value) {
 }
 
 function getVisibleProperties() {
-  const minimumBedrooms = bedroomFilter.value ? Number(bedroomFilter.value) : null;
   const favorites = new Set(readFavorites());
-  return properties.filter((property) => {
-    if (showFavoritesOnly && !favorites.has(property.id)) return false;
-    return minimumBedrooms === null || Number(property.bedrooms) >= minimumBedrooms;
-  });
+  return properties.filter((property) => !showFavoritesOnly || favorites.has(property.id));
 }
 
 function renderProperties() {
@@ -98,28 +95,18 @@ function renderProperties() {
     const imageUrl = property.imageUrls?.[0] || "";
     const location = propertyLocation(property);
     const saved = favorites.has(property.id);
-    const typeLabel = property.listingType === "sale"
-      ? "For sale"
-      : property.listingType === "shortlet" ? "Shortlet" : "For rent";
-    const bedrooms = property.propertyType === "land"
-      ? "Land"
-      : `${Number(property.bedrooms) || 0} bed${Number(property.bedrooms) === 1 ? "" : "s"}`;
-    const bathrooms = property.propertyType === "land"
-      ? "Land"
-      : `${Number(property.bathrooms) || 0} bath${Number(property.bathrooms) === 1 ? "" : "s"}`;
-
     return `<article class="property-card">
       <div class="card-image-wrap">
         <img class="card-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(property.title)}" loading="lazy" />
-        <span class="listing-badge">${typeLabel}</span>
+        <span class="listing-badge">Land for sale</span>
         ${property.isDemo ? '<span class="demo-badge">Demo listing</span>' : ""}
         <button class="save-property" type="button" data-action="save" data-id="${escapeHtml(property.id)}" aria-pressed="${saved}" aria-label="${saved ? "Remove saved property" : "Save property"}">${saved ? "♥" : "♡"}</button>
       </div>
       <div class="card-body">
-        <p class="card-price">${formatPrice(property.price, property.listingType)}</p>
+        <p class="card-price">${formatPrice(property.price)}</p>
         <h3 class="card-title" title="${escapeHtml(property.title)}">${escapeHtml(property.title)}</h3>
         <p class="card-location"><span aria-hidden="true">⌖</span> ${escapeHtml(location || property.address)}</p>
-        <div class="card-specs"><span>${bedrooms}</span><span>${bathrooms}</span><span>${Number(property.areaSqm) || 0} m²</span></div>
+        <div class="card-specs"><span>Land for sale</span><span>${formatLandArea(property.areaSqm)}</span></div>
         <div class="card-footer"><span class="card-agent">${property.isDemo ? "Sample property" : `Listed by ${escapeHtml(property.agentName)}`}</span><button class="card-details-button" type="button" data-action="details" data-id="${escapeHtml(property.id)}">View details →</button></div>
       </div>
     </article>`;
@@ -157,23 +144,18 @@ function showPropertyDetails(property) {
   const gallery = (property.imageUrls || []).slice(0, 5).map((imageUrl) =>
     `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(property.title)}" loading="lazy" />`
   ).join("");
-  const typeLabel = property.listingType === "sale"
-    ? "For sale"
-    : property.listingType === "shortlet" ? "Shortlet" : "For rent";
-  const specs = property.propertyType === "land"
-    ? `<span>${Number(property.areaSqm) || 0} m² land</span>`
-    : `<span>${Number(property.bedrooms) || 0} bedrooms</span><span>${Number(property.bathrooms) || 0} bathrooms</span><span>${Number(property.areaSqm) || 0} m²</span>`;
+  const specs = `<span>Land for sale</span><span>${formatLandArea(property.areaSqm)}</span>`;
   const contactLinks = property.isDemo
-    ? '<p class="dialog-demo-note">This is a fictional demo property. Its location, availability, and details are examples only; it has no real agent contact.</p>'
+    ? '<p class="dialog-demo-note">This is fictional sample land. The location, title, boundaries, price, and availability are examples only; verify these details independently for any real property.</p>'
     : `<a class="dialog-action" href="tel:${escapeHtml(phone)}">Call ${escapeHtml(property.agentName || "agent")}</a>
        ${whatsappPhone ? `<a class="dialog-action dialog-action-secondary" href="https://wa.me/${escapeHtml(whatsappPhone)}" target="_blank" rel="noopener noreferrer">WhatsApp agent</a>` : ""}`;
 
   propertyDetails.innerHTML = `<div class="dialog-gallery">${gallery}</div>
     <div class="dialog-content">
-      <span class="market-eyebrow">${typeLabel} · ${escapeHtml(property.propertyType)}</span>
+      <span class="market-eyebrow">Land for sale</span>
       <h2>${escapeHtml(property.title)}</h2>
       <p class="card-location">⌖ ${escapeHtml(location)}</p>
-      <p class="dialog-price">${formatPrice(property.price, property.listingType)}</p>
+      <p class="dialog-price">${formatPrice(property.price)}</p>
       <div class="dialog-specs">${specs}</div>
       <p class="dialog-description">${escapeHtml(property.description || "Contact the realtor for more information.")}</p>
       <div class="dialog-actions">
@@ -196,8 +178,6 @@ propertySearch.addEventListener("submit", (event) => {
   event.preventDefault();
   loadProperties().catch((error) => showMarketError(error.message || "Unable to load property listings."));
 });
-
-bedroomFilter.addEventListener("change", renderProperties);
 
 savedToggle.addEventListener("click", () => {
   showFavoritesOnly = !showFavoritesOnly;
@@ -240,8 +220,6 @@ propertySubmissionForm.addEventListener("submit", async (event) => {
     propertyType: form.propertyType,
     listingType: form.listingType,
     price: form.price,
-    bedrooms: form.bedrooms,
-    bathrooms: form.bathrooms,
     areaSqm: form.areaSqm,
     address: form.address,
     city: form.city,

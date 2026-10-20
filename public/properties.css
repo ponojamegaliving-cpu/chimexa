@@ -193,7 +193,7 @@ a {
   min-height: 420px;
   background:
     linear-gradient(90deg, var(--market-cream) 0%, rgba(246, 244, 236, .2) 24%, rgba(0, 0, 0, .03) 100%),
-    url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1500&q=85") center/cover no-repeat;
+  url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1500&q=85") center/cover no-repeat;
 }
 
 .hero-note {
@@ -280,7 +280,7 @@ a {
 
 .search-panel {
   display: grid;
-  grid-template-columns: minmax(180px, 1.6fr) repeat(3, minmax(125px, .85fr)) auto;
+  grid-template-columns: minmax(180px, 1.6fr) minmax(125px, .85fr) minmax(125px, .85fr) auto;
   align-items: end;
   gap: 12px;
   border: 1px solid var(--market-border);
@@ -353,6 +353,15 @@ a {
 .results-toolbar p {
   color: var(--market-muted);
   font-size: 13px;
+}
+
+.land-only-note {
+  border-radius: 99px;
+  background: #edf5ef;
+  padding: 7px 11px;
+  color: var(--market-green);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .bedroom-filter {
@@ -994,7 +1003,7 @@ a {
     flex: 1;
     background:
       linear-gradient(180deg, var(--market-cream) 0%, rgba(246, 244, 236, .05) 35%),
-      url("https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=80") center/cover no-repeat;
+      url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80") center/cover no-repeat;
   }
 
   .hero-note {

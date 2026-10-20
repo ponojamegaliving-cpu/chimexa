@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#173b2a" />
-    <meta name="description" content="Browse homes, apartments, land, and commercial property listings in Nigeria." />
-    <title>Find a Property | Crystal Garden</title>
+    <meta name="description" content="Discover land for sale across Nigeria and connect with registered realtors." />
+    <title>Land for Sale | Crystal Garden</title>
     <link rel="stylesheet" href="/properties.css" />
     <script src="/properties.js" defer></script>
   </head>
@@ -16,8 +16,8 @@
         <span><small>CRYSTAL GARDEN</small><strong>Property marketplace</strong></span>
       </a>
       <nav class="market-nav" aria-label="Main navigation">
-        <a href="#listings">Find a property</a>
-        <a href="#submit-listing">List a property</a>
+        <a href="#listings">Find land</a>
+        <a href="#submit-listing">List land</a>
         <a class="market-nav-secondary" href="/">Realtor portal</a>
       </nav>
     </header>
@@ -25,21 +25,21 @@
     <main>
       <section class="market-hero">
         <div class="market-hero-content">
-          <span class="market-eyebrow">A better way to find your next place</span>
-          <h1>Find a place to <span>call home.</span></h1>
-          <p>Explore properties for sale and rent, then connect directly with a registered realtor.</p>
-          <a class="market-primary-link" href="#listings">Explore properties <span aria-hidden="true">↓</span></a>
+          <span class="market-eyebrow">Land opportunities across Nigeria</span>
+          <h1>Find the right land to <span>build your future.</span></h1>
+          <p>Explore land for sale and connect directly with a registered realtor.</p>
+          <a class="market-primary-link" href="#listings">Explore land <span aria-hidden="true">↓</span></a>
         </div>
-        <div class="market-hero-image" role="img" aria-label="Contemporary family home"></div>
-        <div class="hero-note"><span class="hero-note-dot"></span> Discover homes across Nigeria</div>
+        <div class="market-hero-image" role="img" aria-label="Open green land"></div>
+        <div class="hero-note"><span class="hero-note-dot"></span> Land for sale across Nigeria</div>
       </section>
 
       <section class="market-content" id="listings">
         <div class="section-heading">
           <div>
-            <span class="market-eyebrow">The property collection</span>
-            <h2>Find your next property</h2>
-            <p>Search verified agent listings. Demo listings are labeled clearly.</p>
+            <span class="market-eyebrow">The land collection</span>
+            <h2>Explore land for sale</h2>
+            <p>Search realtor listings. Demo plots are clearly marked as fictional examples.</p>
           </div>
           <button class="saved-toggle" id="savedToggle" type="button" aria-pressed="false">
             <span aria-hidden="true">♡</span> Saved <span id="savedCount">0</span>
@@ -52,23 +52,8 @@
             <input name="search" type="search" placeholder="City, neighbourhood, or keyword" />
           </label>
           <label class="search-field">
-            <span>Listing type</span>
-            <select name="listingType">
-              <option value="">Buy or rent</option>
-              <option value="sale">For sale</option>
-              <option value="rent">For rent</option>
-              <option value="shortlet">Shortlet</option>
-            </select>
-          </label>
-          <label class="search-field">
-            <span>Property type</span>
-            <select name="propertyType">
-              <option value="">Any type</option>
-              <option value="house">House</option>
-              <option value="apartment">Apartment</option>
-              <option value="land">Land</option>
-              <option value="commercial">Commercial</option>
-            </select>
+            <span>Inventory</span>
+            <input type="text" value="Land for sale" readonly aria-label="Land for sale" />
           </label>
           <label class="search-field">
             <span>Max price (₦)</span>
@@ -79,15 +64,7 @@
 
         <div class="results-toolbar">
           <p id="resultsCount" aria-live="polite">Loading properties…</p>
-          <label class="bedroom-filter">Bedrooms
-            <select id="bedroomFilter" aria-label="Minimum bedrooms">
-              <option value="">Any</option>
-              <option value="1">1+</option>
-              <option value="2">2+</option>
-              <option value="3">3+</option>
-              <option value="4">4+</option>
-            </select>
-          </label>
+          <span class="land-only-note">Land for sale</span>
         </div>
 
         <div id="propertyGrid" class="property-grid" aria-live="polite"></div>
@@ -97,25 +74,23 @@
       <section class="submit-section" id="submit-listing">
         <div class="submit-intro">
           <span class="market-eyebrow">For registered realtors</span>
-          <h2>Have a property to share?</h2>
-          <p>Send your listing for review. It will appear in the marketplace after an administrator approves it.</p>
-          <div class="submit-review-note"><strong>Every listing is reviewed.</strong> This helps protect home seekers from inaccurate or unverified property details.</div>
+          <h2>Have land to sell?</h2>
+          <p>Registered realtors can submit land listings for review. Listings appear after an administrator approves them.</p>
+          <div class="submit-review-note"><strong>Every land listing is reviewed.</strong> Buyers should independently verify land title, survey, boundaries, and availability.</div>
         </div>
         <form id="propertySubmissionForm" class="property-form">
           <h3>Submit a property</h3>
           <div class="form-grid">
             <label class="form-span"><span>Registered realtor phone number</span><input name="realtorPhone" type="tel" autocomplete="tel" required placeholder="Use the number on your realtor registration" /></label>
-            <label class="form-span"><span>Listing title</span><input name="title" required maxlength="120" placeholder="e.g. Three-bedroom home in Lekki" /></label>
-            <label><span>Listing type</span><select name="listingType" required><option value="sale">For sale</option><option value="rent">For rent</option><option value="shortlet">Shortlet</option></select></label>
-            <label><span>Property type</span><select name="propertyType" required><option value="house">House</option><option value="apartment">Apartment</option><option value="land">Land</option><option value="commercial">Commercial</option></select></label>
+            <label class="form-span"><span>Land listing title</span><input name="title" required maxlength="120" placeholder="e.g. Residential plot for sale in Lekki" /></label>
+            <input name="listingType" type="hidden" value="sale" />
+            <input name="propertyType" type="hidden" value="land" />
             <label><span>Price (₦)</span><input name="price" type="number" min="1" step="1000" required inputmode="numeric" /></label>
-            <label><span>Bedrooms</span><input name="bedrooms" type="number" min="0" step="1" value="0" required inputmode="numeric" /></label>
-            <label><span>Bathrooms</span><input name="bathrooms" type="number" min="0" step="1" value="0" required inputmode="numeric" /></label>
-            <label><span>Area (m²)</span><input name="areaSqm" type="number" min="0" step="1" value="0" required inputmode="numeric" /></label>
+            <label><span>Land area (m²)</span><input name="areaSqm" type="number" min="1" step="1" required inputmode="numeric" /></label>
             <label class="form-span"><span>Street address or neighbourhood</span><input name="address" required maxlength="200" /></label>
             <label><span>City</span><input name="city" required maxlength="80" /></label>
             <label><span>State or territory</span><input name="state" required maxlength="80" /></label>
-            <label class="form-span"><span>Description</span><textarea name="description" rows="4" maxlength="3000" placeholder="Describe the property and its key features"></textarea></label>
+            <label class="form-span"><span>Land details</span><textarea name="description" rows="4" maxlength="3000" placeholder="Add land use, title documents, survey, access, and other relevant details"></textarea></label>
             <label class="form-span"><span>Photo URLs (one secure HTTPS URL per line, up to 10)</span><textarea name="imageUrls" rows="3" required placeholder="https://example.com/property-photo.jpg"></textarea></label>
           </div>
           <p id="submissionStatus" class="form-status" role="status" aria-live="polite"></p>

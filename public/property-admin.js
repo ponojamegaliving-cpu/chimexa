@@ -17,13 +17,12 @@ function escapeAdminHtml(value) {
   })[character]);
 }
 
-function adminPrice(price, listingType) {
-  const value = new Intl.NumberFormat("en-NG", {
+function adminPrice(price) {
+  return new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
     maximumFractionDigits: 0
   }).format(Number(price) || 0);
-  return listingType === "rent" ? `${value} / year` : listingType === "shortlet" ? `${value} / night` : value;
 }
 
 function setAdminStatus(message, isError = false) {
@@ -51,17 +50,18 @@ function renderManagedProperties() {
 
   adminListingGrid.innerHTML = managedProperties.map((property) => {
     const demo = property.isDemo === true;
+    const legacy = property.propertyType !== "land" || property.listingType !== "sale";
     const statusLabel = demo ? "Demo" : escapeAdminHtml(property.status);
     const actions = demo
       ? '<span class="admin-status">Example data — cannot be edited</span>'
-      : `<button type="button" data-action="review" data-status="approved" data-id="${escapeAdminHtml(property.id)}">Approve</button>
+      : `${legacy ? '<span class="admin-status">Older non-land listing — not shown publicly</span>' : `<button type="button" data-action="review" data-status="approved" data-id="${escapeAdminHtml(property.id)}">Approve</button>`}
          <button type="button" data-action="review" data-status="rejected" data-id="${escapeAdminHtml(property.id)}">Reject</button>
          <button type="button" data-action="delete" data-id="${escapeAdminHtml(property.id)}">Delete</button>`;
     return `<article class="admin-listing">
       <img src="${escapeAdminHtml(property.imageUrls?.[0] || "")}" alt="" loading="lazy" />
       <div>
         <h3>${escapeAdminHtml(property.title)}</h3>
-        <p>${adminPrice(property.price, property.listingType)} · ${escapeAdminHtml(property.city)}, ${escapeAdminHtml(property.state)}</p>
+        <p>${adminPrice(property.price)} · ${Number(property.areaSqm || 0).toLocaleString()} m² · ${escapeAdminHtml(property.city)}, ${escapeAdminHtml(property.state)}</p>
         <p>Status: <strong>${statusLabel}</strong> · Agent: ${escapeAdminHtml(property.agentName)}</p>
       </div>
       <div class="admin-listing-actions">${actions}</div>
@@ -84,8 +84,6 @@ function propertyPayload(form) {
     propertyType: form.propertyType,
     listingType: form.listingType,
     price: form.price,
-    bedrooms: form.bedrooms,
-    bathrooms: form.bathrooms,
     areaSqm: form.areaSqm,
     address: form.address,
     city: form.city,
