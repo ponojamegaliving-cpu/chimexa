@@ -15,7 +15,7 @@ process.env.ADMIN_PASSWORD = "marketplace-test-password";
 const { records } = require("../server/data");
 const { writeRecords } = require("../server/googleSheets");
 const {
-  demoProperties,
+  officialProperties,
   readProperties,
   updateProperties,
   filterProperties,
@@ -65,27 +65,44 @@ test.after(async () => {
   delete process.env.ADMIN_PASSWORD;
 });
 
-test("starts with labeled demo listings and returns only approved public properties", async () => {
+test("starts with verified official estate listings and returns only approved land for sale", async () => {
   const properties = await readProperties();
-  assert.equal(properties.length, demoProperties.length);
-  assert.ok(properties.every((property) => property.isDemo));
+  assert.equal(properties.length, officialProperties.length);
+  assert.ok(properties.every((property) => property.isOfficial && !property.isDemo));
   assert.ok(properties.every((property) => property.propertyType === "land" && property.listingType === "sale"));
+  assert.deepEqual(properties.map((property) => property.title), officialProperties.map((property) => property.title));
+  assert.deepEqual(properties.map((property) => property.price), [3250000, 15000000, 3550000, 6550000, 6250000, 13500000, 3050000]);
+  assert.ok(properties.every((property) => property.sourceUrl.startsWith("https://crystalgardenestate.com/property/")));
+  assert.equal(properties.find((property) => property.title === "Smart City").areaDisplay, "50 × 100 ft");
   assert.equal(filterProperties([
     ...properties,
     { ...sampleProperty({ propertyType: "house" }), id: "old-home", status: "approved", isDemo: false },
     { ...sampleProperty({ listingType: "rent" }), id: "old-rental", status: "approved", isDemo: false },
     { ...sampleProperty(), id: "pending", status: "pending", isDemo: false }
-  ]).length, demoProperties.length);
-  assert.equal(filterProperties(properties, { city: "Lagos", propertyType: "land", listingType: "sale" }).length, 3);
+  ]).length, officialProperties.length);
+  assert.equal(filterProperties(properties, { city: "Anambra", propertyType: "land", listingType: "sale" }).length, 4);
   assert.throws(() => filterProperties(properties, { maxPrice: "not-a-price" }), /valid non-negative amount/);
-  assert.throws(() => filterProperties(properties, { propertyType: "house" }), /valid property type filter/);
-  assert.throws(() => filterProperties(properties, { listingType: "rent" }), /valid listing type filter/);
+  assert.throws(() => filterProperties(properties, { propertyType: "house" }), /Only land listings are available/);
+  assert.throws(() => filterProperties(properties, { listingType: "rent" }), /Only land for sale is available/);
+});
+
+test("replaces fictional seed data while preserving submitted realtor listings", async () => {
+  const realtorListing = { ...sampleProperty(), id: "saved-realtor-listing", status: "pending", isDemo: false };
+  await fs.writeFile(propertiesPath, JSON.stringify([
+    { id: "demo-land-lekki", isDemo: true },
+    realtorListing
+  ]));
+  const properties = await readProperties();
+  assert.equal(properties.length, officialProperties.length + 1);
+  assert.ok(!properties.some((property) => property.id === "demo-land-lekki"));
+  assert.ok(properties.some((property) => property.id === realtorListing.id));
+  await fs.rm(propertiesPath, { force: true });
 });
 
 test("validates property fields and accepts only HTTPS photo URLs", () => {
   assert.throws(() => createProperty(sampleProperty({ price: -1 }), { name: "Agent" }, "pending"), /Price must be greater/);
   assert.throws(() => createProperty(sampleProperty({ imageUrls: ["http://images.example.com/home.jpg"] }), { name: "Agent" }, "pending"), /HTTPS/);
-  assert.throws(() => createProperty(sampleProperty({ propertyType: "house" }), { name: "Agent" }, "pending"), /property type/);
+  assert.throws(() => createProperty(sampleProperty({ propertyType: "house" }), { name: "Agent" }, "pending"), /Only land listings/);
   assert.throws(() => createProperty(sampleProperty({ listingType: "rent" }), { name: "Agent" }, "pending"), /Only land listings for sale/);
   assert.throws(() => createProperty(sampleProperty({ areaSqm: 0 }), { name: "Agent", phone: "08000000000" }, "pending"), /Land area/);
   assert.throws(() => createProperty(sampleProperty(), { name: "Agent" }, "pending"), /Agent phone is required/);
@@ -102,7 +119,7 @@ test("serializes updates and persists listings to disk", async () => {
       return properties.length;
     })
   ]);
-  assert.deepEqual(results, [5, 6]);
+  assert.deepEqual(results, [officialProperties.length + 1, officialProperties.length + 2]);
   const saved = await readProperties();
   assert.ok(saved.some((property) => property.id === "first"));
   assert.ok(saved.some((property) => property.id === "second"));
@@ -133,6 +150,28 @@ test("registered agents submit pending listings and admins approve or delete the
     body: JSON.stringify({ realtorPhone: "00000000000", property: sampleProperty() })
   });
   assert.equal(unregistered.status, 403);
+
+  const houseSubmission = await fetch(`${baseUrl}/properties/submissions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      realtorPhone: records[0]["REALTOR PHONE NO"],
+      property: sampleProperty({ propertyType: "house" })
+    })
+  });
+  assert.equal(houseSubmission.status, 400);
+  assert.match((await houseSubmission.json()).error, /Only land listings/);
+
+  const rentalSubmission = await fetch(`${baseUrl}/properties/submissions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      realtorPhone: records[0]["REALTOR PHONE NO"],
+      property: sampleProperty({ listingType: "rent" })
+    })
+  });
+  assert.equal(rentalSubmission.status, 400);
+  assert.match((await rentalSubmission.json()).error, /Only land listings for sale/);
 
   const submittedResponse = await fetch(`${baseUrl}/properties/submissions`, {
     method: "POST",
@@ -186,10 +225,10 @@ test("registered agents submit pending listings and admins approve or delete the
   assert.equal(direct.property.isDemo, false);
 });
 
-test("demo listings cannot be changed or deleted", () => {
-  const properties = structuredClone(demoProperties);
-  assert.throws(() => updatePropertyStatus(properties, properties[0].id, "rejected"), /Demo listings/);
-  assert.throws(() => deleteProperty(properties, properties[0].id), /Demo listings/);
+test("official listings cannot be changed or deleted from the realtor admin page", () => {
+  const properties = structuredClone(officialProperties);
+  assert.throws(() => updatePropertyStatus(properties, properties[0].id, "rejected"), /Seeded listings/);
+  assert.throws(() => deleteProperty(properties, properties[0].id), /Seeded listings/);
 });
 
 test("older home and rental listings stay hidden and cannot be approved", () => {

@@ -42,7 +42,7 @@ async function adminRequest(path, payload = {}) {
 }
 
 function renderManagedProperties() {
-  adminListingCount.textContent = `${managedProperties.length} listing${managedProperties.length === 1 ? "" : "s"} (including demo properties)`;
+  adminListingCount.textContent = `${managedProperties.length} listing${managedProperties.length === 1 ? "" : "s"} (including official website listings)`;
   if (!managedProperties.length) {
     adminListingGrid.innerHTML = '<p class="admin-status">There are no property listings yet.</p>';
     return;
@@ -50,18 +50,21 @@ function renderManagedProperties() {
 
   adminListingGrid.innerHTML = managedProperties.map((property) => {
     const demo = property.isDemo === true;
+    const official = property.isOfficial === true;
     const legacy = property.propertyType !== "land" || property.listingType !== "sale";
-    const statusLabel = demo ? "Demo" : escapeAdminHtml(property.status);
-    const actions = demo
-      ? '<span class="admin-status">Example data — cannot be edited</span>'
-      : `${legacy ? '<span class="admin-status">Older non-land listing — not shown publicly</span>' : `<button type="button" data-action="review" data-status="approved" data-id="${escapeAdminHtml(property.id)}">Approve</button>`}
+    const statusLabel = official ? "Official website listing" : demo ? "Demo" : escapeAdminHtml(property.status);
+    const actions = demo || official
+      ? `<span class="admin-status">${official ? "Managed from the official website" : "Example data — cannot be edited"}</span>`
+      : `${legacy ? '<span class="admin-status">Older non-land listing — not shown publicly</span>' : `<button type="button" data-action="review" data-status="approved" data-id="${escapeAdminHtml(property.id)}">Approve land listing</button>`}
          <button type="button" data-action="review" data-status="rejected" data-id="${escapeAdminHtml(property.id)}">Reject</button>
          <button type="button" data-action="delete" data-id="${escapeAdminHtml(property.id)}">Delete</button>`;
+    const area = Number(property.areaSqm);
+    const areaLabel = property.areaDisplay || (Number.isFinite(area) && area > 0 ? `${area.toLocaleString()} m²` : "Land size not provided");
     return `<article class="admin-listing">
       <img src="${escapeAdminHtml(property.imageUrls?.[0] || "")}" alt="" loading="lazy" />
       <div>
         <h3>${escapeAdminHtml(property.title)}</h3>
-        <p>${adminPrice(property.price)} · ${Number(property.areaSqm || 0).toLocaleString()} m² · ${escapeAdminHtml(property.city)}, ${escapeAdminHtml(property.state)}</p>
+        <p>${adminPrice(property.price)} · ${areaLabel} · ${escapeAdminHtml(property.city)}, ${escapeAdminHtml(property.state)}</p>
         <p>Status: <strong>${statusLabel}</strong> · Agent: ${escapeAdminHtml(property.agentName)}</p>
       </div>
       <div class="admin-listing-actions">${actions}</div>

@@ -56,7 +56,8 @@ function propertyLocation(property) {
   return [property.city, property.state].filter(Boolean).join(", ");
 }
 
-function formatLandArea(value) {
+function formatLandArea(value, displayValue) {
+  if (displayValue) return String(displayValue);
   const area = Number(value);
   return Number.isFinite(area) && area > 0 ? `${area.toLocaleString()} m²` : "Land size not provided";
 }
@@ -74,7 +75,7 @@ function getVisibleProperties() {
 
 function renderProperties() {
   const visibleProperties = getVisibleProperties();
-  resultsCount.textContent = `${visibleProperties.length} ${visibleProperties.length === 1 ? "property" : "properties"} found`;
+  resultsCount.textContent = `${visibleProperties.length} land listing${visibleProperties.length === 1 ? "" : "s"} found`;
   savedCount.textContent = String(readFavorites().length);
   savedToggle.setAttribute("aria-pressed", String(showFavoritesOnly));
   savedToggle.firstChild.textContent = showFavoritesOnly ? "♥ " : "♡ ";
@@ -82,8 +83,8 @@ function renderProperties() {
   if (!visibleProperties.length) {
     propertyGrid.innerHTML = "";
     marketStatus.textContent = showFavoritesOnly
-      ? "You have no saved properties yet. Tap the heart on a property to save it."
-      : "No properties match those filters. Try a different location or price.";
+      ? "You have no saved land yet. Tap the heart on a listing to save it."
+      : "No land listings match those filters. Try a different location or price.";
     marketStatus.className = "market-status";
     return;
   }
@@ -99,15 +100,15 @@ function renderProperties() {
       <div class="card-image-wrap">
         <img class="card-image" src="${escapeHtml(imageUrl)}" alt="${escapeHtml(property.title)}" loading="lazy" />
         <span class="listing-badge">Land for sale</span>
-        ${property.isDemo ? '<span class="demo-badge">Demo listing</span>' : ""}
+        ${property.isOfficial ? '<span class="official-badge">Featured</span>' : property.isDemo ? '<span class="demo-badge">Demo listing</span>' : ""}
         <button class="save-property" type="button" data-action="save" data-id="${escapeHtml(property.id)}" aria-pressed="${saved}" aria-label="${saved ? "Remove saved property" : "Save property"}">${saved ? "♥" : "♡"}</button>
       </div>
       <div class="card-body">
         <p class="card-price">${formatPrice(property.price)}</p>
         <h3 class="card-title" title="${escapeHtml(property.title)}">${escapeHtml(property.title)}</h3>
         <p class="card-location"><span aria-hidden="true">⌖</span> ${escapeHtml(location || property.address)}</p>
-        <div class="card-specs"><span>Land for sale</span><span>${formatLandArea(property.areaSqm)}</span></div>
-        <div class="card-footer"><span class="card-agent">${property.isDemo ? "Sample property" : `Listed by ${escapeHtml(property.agentName)}`}</span><button class="card-details-button" type="button" data-action="details" data-id="${escapeHtml(property.id)}">View details →</button></div>
+        <div class="card-specs"><span>Land for sale</span><span>${escapeHtml(formatLandArea(property.areaSqm, property.areaDisplay))}</span></div>
+        <div class="card-footer"><span class="card-agent">${property.isOfficial ? "Crystal Garden Estate" : property.isDemo ? "Sample property" : `Listed by ${escapeHtml(property.agentName)}`}</span><button class="card-details-button" type="button" data-action="details" data-id="${escapeHtml(property.id)}">View details →</button></div>
       </div>
     </article>`;
   }).join("");
@@ -144,11 +145,14 @@ function showPropertyDetails(property) {
   const gallery = (property.imageUrls || []).slice(0, 5).map((imageUrl) =>
     `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(property.title)}" loading="lazy" />`
   ).join("");
-  const specs = `<span>Land for sale</span><span>${formatLandArea(property.areaSqm)}</span>`;
+  const specs = `<span>Land for sale</span><span>${escapeHtml(formatLandArea(property.areaSqm, property.areaDisplay))}</span>`;
   const contactLinks = property.isDemo
     ? '<p class="dialog-demo-note">This is fictional sample land. The location, title, boundaries, price, and availability are examples only; verify these details independently for any real property.</p>'
     : `<a class="dialog-action" href="tel:${escapeHtml(phone)}">Call ${escapeHtml(property.agentName || "agent")}</a>
        ${whatsappPhone ? `<a class="dialog-action dialog-action-secondary" href="https://wa.me/${escapeHtml(whatsappPhone)}" target="_blank" rel="noopener noreferrer">WhatsApp agent</a>` : ""}`;
+  const sourceLink = property.sourceUrl
+    ? `<a class="dialog-action dialog-action-secondary" href="${escapeHtml(property.sourceUrl)}" target="_blank" rel="noopener noreferrer">View official listing</a>`
+    : "";
 
   propertyDetails.innerHTML = `<div class="dialog-gallery">${gallery}</div>
     <div class="dialog-content">
@@ -160,8 +164,10 @@ function showPropertyDetails(property) {
       <p class="dialog-description">${escapeHtml(property.description || "Contact the realtor for more information.")}</p>
       <div class="dialog-actions">
         ${contactLinks}
+        ${sourceLink}
         <a class="dialog-action dialog-action-secondary" href="${mapUrl}" target="_blank" rel="noopener noreferrer">Open map</a>
       </div>
+      ${property.isOfficial ? '<p class="official-listing-note">Listing details are from Crystal Garden Estate. Confirm current price, availability, plot size, location, and land documents directly with the sales team.</p>' : ""}
     </div>`;
   if (typeof propertyDialog.showModal === "function") propertyDialog.showModal();
   else propertyDialog.setAttribute("open", "");

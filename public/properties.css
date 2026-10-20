@@ -1,11 +1,12 @@
 :root {
   color-scheme: light;
-  --market-ink: #16271f;
-  --market-muted: #66736c;
-  --market-green: #176b56;
-  --market-deep: #103c31;
-  --market-cream: #f6f4ec;
-  --market-border: #e3e7df;
+  --market-ink: #26342b;
+  --market-muted: #68746b;
+  --market-green: #08763a;
+  --market-deep: #07552b;
+  --market-cream: #f3f5f0;
+  --market-border: #e2e7e1;
+  --market-accent: #f1a329;
   --market-white: #fff;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -50,7 +51,7 @@ a {
   justify-content: space-between;
   gap: 24px;
   padding: 12px max(5.5vw, 24px);
-  background: #fff;
+  background: #07552b;
 }
 
 .market-brand {
@@ -58,6 +59,20 @@ a {
   align-items: center;
   gap: 11px;
   text-decoration: none;
+}
+
+.market-logo {
+  display: block;
+  width: 154px;
+  height: auto;
+}
+
+.market-brand-tagline {
+  border-left: 1px solid rgba(255, 255, 255, .38);
+  padding-left: 12px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .market-brand-mark {
@@ -95,7 +110,7 @@ a {
   display: flex;
   align-items: center;
   gap: 30px;
-  color: #425148;
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
 }
@@ -106,11 +121,11 @@ a {
 
 .market-nav a:hover,
 .market-footer > a:last-child:hover {
-  color: var(--market-green);
+  color: #ffd27b;
 }
 
 .market-nav-secondary {
-  border: 1px solid var(--market-border);
+  border: 1px solid rgba(255, 255, 255, .55);
   border-radius: 99px;
   padding: 10px 16px;
 }
@@ -193,7 +208,7 @@ a {
   min-height: 420px;
   background:
     linear-gradient(90deg, var(--market-cream) 0%, rgba(246, 244, 236, .2) 24%, rgba(0, 0, 0, .03) 100%),
-  url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1500&q=85") center/cover no-repeat;
+  url("https://crystalgardenestate.com/wp-content/uploads/2026/07/5938094214790974933.jpg") center/cover no-repeat;
 }
 
 .hero-note {
@@ -217,7 +232,7 @@ a {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #52a875;
+  background: var(--market-accent);
 }
 
 .market-content {
@@ -418,7 +433,8 @@ a {
 }
 
 .listing-badge,
-.demo-badge {
+.demo-badge,
+.official-badge {
   position: absolute;
   top: 13px;
   left: 13px;
@@ -426,9 +442,9 @@ a {
   align-items: center;
   min-height: 26px;
   border-radius: 99px;
-  background: rgba(255, 255, 255, .95);
+  background: var(--market-green);
   padding: 0 10px;
-  color: var(--market-deep);
+  color: #fff;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .02em;
@@ -440,6 +456,14 @@ a {
   left: 13px;
   background: #fff6df;
   color: #815b13;
+}
+
+.official-badge {
+  top: auto;
+  bottom: 13px;
+  left: 13px;
+  background: var(--market-accent);
+  color: #2d261b;
 }
 
 .save-property {
@@ -651,7 +675,8 @@ a {
   justify-content: space-between;
   gap: 18px;
   padding: 16px max(5.5vw, 24px);
-  background: #fff;
+  background: #07552b;
+  color: #fff;
 }
 
 .market-brand-footer .market-brand-mark {
@@ -665,11 +690,21 @@ a {
   font-size: 13px;
 }
 
-.market-footer > a:last-child {
-  color: #425148;
+.market-footer-contact {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+
+.market-footer-contact a {
+  color: #fff;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
+}
+
+.market-footer-contact a:hover {
+  color: #ffd27b;
 }
 
 .property-dialog {
@@ -799,14 +834,21 @@ a {
   line-height: 1.6;
 }
 
+.official-listing-note {
+  margin: 18px 0 0;
+  color: var(--market-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .admin-page {
   min-height: 100vh;
   background: #f5f7f4;
 }
 
 .admin-header {
-  border-bottom: 1px solid var(--market-border);
-  background: #fff;
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+  background: #07552b;
 }
 
 .admin-main {
@@ -956,13 +998,12 @@ a {
     padding-inline: 16px;
   }
 
-  .market-brand-mark {
-    width: 37px;
-    height: 37px;
+  .market-logo {
+    width: 126px;
   }
 
-  .market-brand strong {
-    font-size: 13px;
+  .market-brand-tagline {
+    display: none;
   }
 
   .market-nav {
@@ -971,6 +1012,10 @@ a {
   }
 
   .market-nav > a:first-child {
+    display: none;
+  }
+
+  .market-nav > a:nth-child(2) {
     display: none;
   }
 
@@ -1003,7 +1048,7 @@ a {
     flex: 1;
     background:
       linear-gradient(180deg, var(--market-cream) 0%, rgba(246, 244, 236, .05) 35%),
-      url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1000&q=80") center/cover no-repeat;
+      url("https://crystalgardenestate.com/wp-content/uploads/2026/07/5938094214790974933.jpg") center/cover no-repeat;
   }
 
   .hero-note {
@@ -1131,12 +1176,13 @@ a {
     padding-inline: 16px;
   }
 
-  .market-brand-footer strong {
-    font-size: 11px;
+  .market-footer-contact {
+    justify-items: end;
+    gap: 4px;
   }
 
-  .market-footer > a:last-child {
-    font-size: 11px;
+  .market-footer-contact a {
+    font-size: 10px;
   }
 
   .dialog-gallery img {
