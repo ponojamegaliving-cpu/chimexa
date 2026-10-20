@@ -2,9 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const dotenv = require("dotenv");
-const { router: apiRoutes } = require("./routes");
 
 dotenv.config();
+const { router: apiRoutes } = require("./routes");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 5000;
@@ -20,6 +20,10 @@ app.use("/api", apiRoutes);
 
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(__dirname, "../public/admin.html"));
+});
+
+app.get("/properties/manage", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/property-admin.html"));
 });
 
 app.get("/", (req, res) => {

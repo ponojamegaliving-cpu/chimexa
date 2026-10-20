@@ -113,6 +113,8 @@ test('new records start from the normal Realtor ID sequence instead of a random-
 
 test('AI assistant answers questions using OpenAI-compatible chat completions', async () => {
   const previousFetch = global.fetch;
+  const previousProvider = process.env.AI_CHAT_PROVIDER;
+  const previousApiKey = process.env.OPENAI_API_KEY;
   global.fetch = async (url, options) => {
     assert.equal(url, 'https://api.openai.com/v1/chat/completions');
     const request = JSON.parse(options.body);
@@ -127,6 +129,7 @@ test('AI assistant answers questions using OpenAI-compatible chat completions', 
   };
 
   try {
+    process.env.AI_CHAT_PROVIDER = 'openai';
     process.env.OPENAI_API_KEY = 'test-key';
     const answer = await askAiAssistant([
       { 'REALTORS NAME': 'Jane Doe', 'REALTOR PHONE NO': '08010000001' },
@@ -136,7 +139,48 @@ test('AI assistant answers questions using OpenAI-compatible chat completions', 
     assert.equal(answer, 'I found 2 realtors in the current data set.');
   } finally {
     global.fetch = previousFetch;
+    if (previousProvider === undefined) delete process.env.AI_CHAT_PROVIDER;
+    else process.env.AI_CHAT_PROVIDER = previousProvider;
+    if (previousApiKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = previousApiKey;
+  }
+});
+
+test('AI assistant uses the installed local Ollama model by default', async () => {
+  const previousFetch = global.fetch;
+  const previousProvider = process.env.AI_CHAT_PROVIDER;
+  const previousApiKey = process.env.OPENAI_API_KEY;
+  const previousModel = process.env.OLLAMA_CHAT_MODEL;
+  global.fetch = async (url, options) => {
+    assert.equal(url, 'http://127.0.0.1:11434/api/chat');
+    const request = JSON.parse(options.body);
+    assert.equal(request.model, 'qwen2.5vl:3b');
+    assert.equal(request.stream, false);
+    assert.match(request.messages[0].content, /How many realtors are in the list\?/);
+    return {
+      ok: true,
+      json: async () => ({ message: { content: 'There are 2 realtors.' } })
+    };
+  };
+
+  try {
+    delete process.env.AI_CHAT_PROVIDER;
     delete process.env.OPENAI_API_KEY;
+    delete process.env.OLLAMA_CHAT_MODEL;
+    const answer = await askAiAssistant([
+      { 'REALTORS NAME': 'Jane Doe', 'REALTOR PHONE NO': '08010000001' },
+      { 'REALTORS NAME': 'John Smith', 'REALTOR PHONE NO': '08010000002' }
+    ], 'How many realtors are in the list?');
+
+    assert.equal(answer, 'There are 2 realtors.');
+  } finally {
+    global.fetch = previousFetch;
+    if (previousProvider === undefined) delete process.env.AI_CHAT_PROVIDER;
+    else process.env.AI_CHAT_PROVIDER = previousProvider;
+    if (previousApiKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = previousApiKey;
+    if (previousModel === undefined) delete process.env.OLLAMA_CHAT_MODEL;
+    else process.env.OLLAMA_CHAT_MODEL = previousModel;
   }
 });
 

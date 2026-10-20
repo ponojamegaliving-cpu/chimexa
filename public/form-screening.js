@@ -162,6 +162,36 @@ function renderReview(values) {
   reviewSection.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+async function recognizeFormText(frontFile, backFile) {
+  if (!window.Tesseract) {
+    throw new Error("Local text recognition could not load. Refresh the page and try again.");
+  }
+
+  let worker;
+  try {
+    worker = await window.Tesseract.createWorker("eng", 1, {
+      workerPath: "/vendor/tesseract/worker.min.js",
+      corePath: "/vendor/tesseract-core",
+      langPath: "/vendor/tessdata/eng/4.0.0",
+      logger: (message) => {
+        if (message.status === "recognizing text") {
+          setStatus(`Reading form text locally… ${Math.round((message.progress || 0) * 100)}%`);
+        }
+      }
+    });
+    setStatus("Reading the front of the form with local OCR…");
+    const frontResult = await worker.recognize(frontFile);
+    setStatus("Reading the back of the form with local OCR…");
+    const backResult = await worker.recognize(backFile);
+    return {
+      frontText: String(frontResult.data.text || "").trim(),
+      backText: String(backResult.data.text || "").trim()
+    };
+  } finally {
+    if (worker) await worker.terminate();
+  }
+}
+
 async function readResponse(response) {
   let body;
   try {
@@ -197,15 +227,18 @@ async function analyzeForm() {
   }
 
   analyzeButton.disabled = true;
-  setStatus("Analyzing both images with the separate vision service. This may take a minute…");
+  setStatus("Reading both sides locally with OCR…");
   reviewSection.classList.add("hidden");
   try {
+    const { frontText, backText } = await recognizeFormText(frontInput.files[0], backInput.files[0]);
     const response = await fetch("/api/realtors/screen-registration-form", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         frontImageData,
         backImageData,
+        frontText,
+        backText,
         adminName: admin.name,
         adminPassword: adminPasswordInput.value
       })

@@ -1,6 +1,14 @@
 const express = require("express");
 const { readRecords, writeRecords, normalize, importCsvRecords } = require("./googleSheets");
 const { REALTOR_FORM_FIELDS, extractRegistrationForm } = require("./registrationFormVision");
+const {
+  readProperties,
+  updateProperties,
+  filterProperties,
+  createProperty,
+  updatePropertyStatus,
+  deleteProperty
+} = require("./properties");
 
 const router = express.Router();
 const ADMIN_NAME = process.env.ADMIN_NAME || "ONOJA PAUL";
@@ -20,6 +28,7 @@ function getOpenAiModel() {
 }
 const imageExtractionRequests = new Map();
 const formScreeningRequests = new Map();
+const propertySubmissionRequests = new Map();
 
 function isImageExtractionRateLimited(req) {
   const now = Date.now();
@@ -49,8 +58,15 @@ async function askAiAssistant(records, prompt) {
     ? JSON.stringify(recordsForContext, null, 2)
     : "No realtor records are available yet.";
 
-  const openAiApiKey = getOpenAiApiKey();
-  if (openAiApiKey) {
+  const aiChatProvider = process.env.AI_CHAT_PROVIDER || "ollama";
+  if (aiChatProvider === "openai") {
+    const openAiApiKey = getOpenAiApiKey();
+    if (!openAiApiKey) {
+      const error = new Error("OPENAI_API_KEY is required when AI_CHAT_PROVIDER is set to openai.");
+      error.status = 503;
+      throw error;
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -88,21 +104,36 @@ async function askAiAssistant(records, prompt) {
     return answer;
   }
 
-  const ollamaResponse = await fetch(`${getOllamaHost()}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(60_000),
-    body: JSON.stringify({
-      model: process.env.OLLAMA_CHAT_MODEL || "llama3.1",
-      stream: false,
-      messages: [
-        {
-          role: "user",
-          content: `Use these realtor records as context, then answer the question.\n\nRecords:\n${recordContext}\n\nQuestion: ${cleanedPrompt}`
-        }
-      ]
-    })
-  });
+  if (aiChatProvider !== "ollama") {
+    const error = new Error("AI_CHAT_PROVIDER must be set to ollama or openai.");
+    error.status = 503;
+    throw error;
+  }
+
+  let ollamaResponse;
+  try {
+    ollamaResponse = await fetch(`${getOllamaHost()}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(180_000),
+      body: JSON.stringify({
+        model: process.env.OLLAMA_CHAT_MODEL || "qwen2.5vl:3b",
+        stream: false,
+        messages: [
+          {
+            role: "user",
+            content: `Use these realtor records as context, then answer the question.\n\nRecords:\n${recordContext}\n\nQuestion: ${cleanedPrompt}`
+          }
+        ]
+      })
+    });
+  } catch (cause) {
+    const error = new Error(cause.name === "TimeoutError"
+      ? "Local AI took too long to respond. The model may still be loading; try again."
+      : "Local Ollama is unavailable. Start Ollama and try again.");
+    error.status = 503;
+    throw error;
+  }
 
   const ollamaPayload = await ollamaResponse.json().catch(() => ({}));
   if (!ollamaResponse.ok) {
@@ -299,6 +330,134 @@ function getReferrerRows(records, phone) {
     }));
 }
 
+function isPropertySubmissionRateLimited(req) {
+  const now = Date.now();
+  const address = req.ip || req.socket?.remoteAddress || "unknown";
+  for (const [key, request] of propertySubmissionRequests) {
+    if (request.expiresAt <= now) propertySubmissionRequests.delete(key);
+  }
+
+  const current = propertySubmissionRequests.get(address);
+  if (!current || current.expiresAt <= now) {
+    propertySubmissionRequests.set(address, { count: 1, expiresAt: now + 60_000 });
+    return false;
+  }
+  if (current.count >= 5) return true;
+  current.count += 1;
+  return false;
+}
+
+function sendPropertyError(res, error, fallback) {
+  const status = error.status || 500;
+  if (status >= 500) console.error(fallback, error);
+  return res.status(status).json({ error: error.message || fallback });
+}
+
+router.get("/properties", async (req, res) => {
+  try {
+    const properties = await readProperties();
+    return res.json({ properties: filterProperties(properties, req.query) });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to load property listings.");
+  }
+});
+
+router.post("/properties/submissions", async (req, res) => {
+  if (isPropertySubmissionRateLimited(req)) {
+    return res.status(429).json({ error: "Too many property submissions. Try again in a minute." });
+  }
+
+  try {
+    const realtorPhone = normalize(req.body?.realtorPhone);
+    const records = await readRecords();
+    const realtor = records.find((record) => normalize(record["REALTOR PHONE NO"]) === realtorPhone);
+    if (!realtor) {
+      return res.status(403).json({ error: "Only registered realtors can submit property listings." });
+    }
+
+    const property = createProperty(req.body?.property, {
+      name: realtor["REALTORS NAME"],
+      phone: realtor["REALTOR PHONE NO"],
+      email: realtor["REALTOR EMAIL ADDRESS"]
+    }, "pending");
+    await updateProperties((properties) => {
+      properties.push(property);
+      return property;
+    });
+    return res.status(201).json({
+      property,
+      message: "Your listing was submitted for review and is not yet public."
+    });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to submit this property listing.");
+  }
+});
+
+router.post("/properties/admin/list", async (req, res) => {
+  const { adminName, adminPassword } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to manage property listings." });
+  }
+
+  try {
+    return res.json({ properties: await readProperties() });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to load property listings.");
+  }
+});
+
+router.post("/properties/admin", async (req, res) => {
+  const { adminName, adminPassword } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to publish a property listing." });
+  }
+
+  try {
+    const property = createProperty(req.body?.property, {
+      name: req.body?.agentName,
+      phone: req.body?.agentPhone,
+      email: req.body?.agentEmail
+    }, "approved");
+    await updateProperties((properties) => {
+      properties.push(property);
+      return property;
+    });
+    return res.status(201).json({ property });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to publish this property listing.");
+  }
+});
+
+router.post("/properties/admin/:id/review", async (req, res) => {
+  const { adminName, adminPassword, status } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to review property listings." });
+  }
+
+  try {
+    const property = await updateProperties((properties) => updatePropertyStatus(properties, req.params.id, status));
+    if (!property) return res.status(404).json({ error: "Property listing not found." });
+    return res.json({ property });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to review this property listing.");
+  }
+});
+
+router.post("/properties/admin/:id/delete", async (req, res) => {
+  const { adminName, adminPassword } = req.body || {};
+  if (!isValidAdminCredentials(adminName, adminPassword)) {
+    return res.status(401).json({ error: "Admin credentials are required to delete property listings." });
+  }
+
+  try {
+    const deleted = await updateProperties((properties) => deleteProperty(properties, req.params.id));
+    if (!deleted) return res.status(404).json({ error: "Property listing not found." });
+    return res.json({ success: true });
+  } catch (error) {
+    return sendPropertyError(res, error, "Unable to delete this property listing.");
+  }
+});
+
 router.post("/login", async (req, res) => {
   const { loginValue, role, adminName, adminPassword } = req.body || {};
 
@@ -379,7 +538,9 @@ router.post("/realtors/screen-registration-form", async (req, res) => {
   try {
     const { values, uncertainFields } = await extractRegistrationForm(
       req.body?.frontImageData,
-      req.body?.backImageData
+      req.body?.backImageData,
+      req.body?.frontText,
+      req.body?.backText
     );
     return res.json({ values, uncertainFields });
   } catch (error) {

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173b2a" />
+    <title>Property Listings Admin | Crystal Garden</title>
+    <link rel="stylesheet" href="/properties.css" />
+    <script src="/property-admin.js" defer></script>
+  </head>
+  <body class="admin-page">
+    <header class="market-header admin-header">
+      <a class="market-brand" href="/properties.html" aria-label="Crystal Garden property marketplace">
+        <span class="market-brand-mark">CG</span>
+        <span><small>CRYSTAL GARDEN</small><strong>Property marketplace</strong></span>
+      </a>
+      <nav class="market-nav" aria-label="Admin navigation">
+        <a href="/properties.html">View marketplace</a>
+        <a href="/">Realtor portal</a>
+      </nav>
+    </header>
+    <main class="admin-main">
+      <span class="market-eyebrow">Marketplace administration</span>
+      <h1>Review property listings</h1>
+      <p>Review agent submissions before publishing. New direct listings are published immediately.</p>
+
+      <form id="adminCredentialForm" class="admin-credential">
+        <label>Admin name<input name="adminName" autocomplete="username" required /></label>
+        <label>Password<input name="adminPassword" type="password" autocomplete="current-password" required /></label>
+        <button class="search-button" type="submit">Load listings</button>
+      </form>
+
+      <p id="adminStatus" class="admin-status" role="status" aria-live="polite"></p>
+      <section id="adminTools" hidden>
+        <form id="adminPropertyForm" class="property-form">
+          <h3>Publish a property listing</h3>
+          <div class="form-grid">
+            <label class="form-span"><span>Listing title</span><input name="title" required maxlength="120" /></label>
+            <label><span>Listing type</span><select name="listingType"><option value="sale">For sale</option><option value="rent">For rent</option><option value="shortlet">Shortlet</option></select></label>
+            <label><span>Property type</span><select name="propertyType"><option value="house">House</option><option value="apartment">Apartment</option><option value="land">Land</option><option value="commercial">Commercial</option></select></label>
+            <label><span>Price (₦)</span><input name="price" type="number" min="1" step="1000" required /></label>
+            <label><span>Bedrooms</span><input name="bedrooms" type="number" min="0" step="1" value="0" required /></label>
+            <label><span>Bathrooms</span><input name="bathrooms" type="number" min="0" step="1" value="0" required /></label>
+            <label><span>Area (m²)</span><input name="areaSqm" type="number" min="0" step="1" value="0" required /></label>
+            <label class="form-span"><span>Street address or neighbourhood</span><input name="address" required maxlength="200" /></label>
+            <label><span>City</span><input name="city" required maxlength="80" /></label>
+            <label><span>State or territory</span><input name="state" required maxlength="80" /></label>
+            <label class="form-span"><span>Description</span><textarea name="description" rows="3" maxlength="3000"></textarea></label>
+            <label class="form-span"><span>Photo URLs (one HTTPS URL per line, up to 10)</span><textarea name="imageUrls" rows="3" required></textarea></label>
+            <label><span>Agent name</span><input name="agentName" required maxlength="120" /></label>
+            <label><span>Agent phone</span><input name="agentPhone" type="tel" maxlength="40" required /></label>
+            <label class="form-span"><span>Agent email</span><input name="agentEmail" type="email" maxlength="160" /></label>
+          </div>
+          <button class="search-button form-submit" type="submit">Publish listing</button>
+        </form>
+
+        <h2 class="admin-list-heading">All listings</h2>
+        <div id="adminListingCount" class="admin-status"></div>
+        <div id="adminListingGrid" class="admin-list"></div>
+      </section>
+    </main>
+  </body>
+</html>
