@@ -8,9 +8,32 @@ const savedToggle = document.getElementById("savedToggle");
 const savedCount = document.getElementById("savedCount");
 const propertySubmissionForm = document.getElementById("propertySubmissionForm");
 const submissionStatus = document.getElementById("submissionStatus");
+const marketMenuToggle = document.getElementById("marketMenuToggle");
+const marketNav = document.getElementById("marketNav");
 const FAVORITES_KEY = "crystalGardenSavedLandListings";
 let properties = [];
 let showFavoritesOnly = false;
+
+function closeMarketMenu() {
+  marketNav.hidden = true;
+  marketMenuToggle.setAttribute("aria-expanded", "false");
+  marketMenuToggle.setAttribute("aria-label", "Open navigation menu");
+}
+
+marketMenuToggle.addEventListener("click", () => {
+  const isExpanded = marketMenuToggle.getAttribute("aria-expanded") === "true";
+  marketNav.hidden = isExpanded;
+  marketMenuToggle.setAttribute("aria-expanded", String(!isExpanded));
+  marketMenuToggle.setAttribute("aria-label", isExpanded ? "Open navigation menu" : "Close navigation menu");
+});
+
+marketNav.addEventListener("click", (event) => {
+  if (event.target.closest("a")) closeMarketMenu();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMarketMenu();
+});
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({
